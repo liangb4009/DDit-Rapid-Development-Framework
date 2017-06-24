@@ -75,6 +75,8 @@
   <ItemGroup>
     <Compile Include="Entity\CoreEntity\News.cs" />
     <Compile Include="Entity\BaseEntity.cs" />
+    <Compile Include="Entity\EquEntity\StopReason.cs" />
+    <Compile Include="Entity\EquEntity\StopReasonView.cs" />
     <Compile Include="Entity\SystemEntity\Button.cs" />
     <Compile Include="Entity\SystemEntity\Dictionary.cs" />
     <Compile Include="Entity\SystemEntity\DictionaryCategory.cs" />
@@ -85,6 +87,8 @@
     <Compile Include="Entity\SystemEntity\RoleMappingButton.cs" />
     <Compile Include="Entity\SystemEntity\Test.cs" />
     <Compile Include="IRepositories\ICoreRepositories\INewsRepository.cs" />
+    <Compile Include="IRepositories\IEquRepositories\IStopReasonRepository.cs" />
+    <Compile Include="IRepositories\IEquRepositories\IStopReasonViewRepository.cs" />
     <Compile Include="IRepositories\ISystemRepositories\IButtonRepository.cs" />
     <Compile Include="IRepositories\ISystemRepositories\IDictionaryCategoryRepository.cs" />
     <Compile Include="IRepositories\ISystemRepositories\IDictionaryRepository.cs" />

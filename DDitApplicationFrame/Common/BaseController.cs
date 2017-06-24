@@ -13,7 +13,7 @@ using Autofac;
 using Newtonsoft.Json.Converters;
 using DDit.Core.Data.Entity;
 using DDit.Core.Data.IRepositories.ICoreRepositories;
-
+using DDit.Core.Data.IRepositories.IEquRepositories;
 
 namespace DDitApplicationFrame.Common
 {
@@ -87,6 +87,11 @@ namespace DDitApplicationFrame.Common
 
         public INewsRepository NewService { get; set; }
 
+        #endregion
+
+        #region equService
+        public IStopReasonRepository StopReasonService { get; set; } 
+        public IStopReasonViewRepository StopReasonViewService { get; set; }
         #endregion
 
         public ContentResult JsonResult<T>(Tuple<int, List<T>> data) where T : class
