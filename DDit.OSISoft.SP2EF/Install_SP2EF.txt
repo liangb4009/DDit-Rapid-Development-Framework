@@ -1,0 +1,50 @@
+Install SP2EF
+1 open "App.config", Modify configuration as below:
+  appSettings, pisystem, the pi server name or ip address;
+  pidatabase, the pi database name;
+  pidatabaseusername, the username for pi server;
+  pidatabasepassword, the password for pi server.
+  such as below for example,
+  "
+  <appSettings>
+    <add key="pisystem" value="CNTWSC0117"/>
+    <add key="pidatabase" value="MI1_extend_MI2"/>
+    <add key="pidatabaseusername" value="QA-NA\CN093128"/>
+    <add key="pidatabasepassword" value="$Tata8515"/>
+  </appSettings>
+  "
+  connectionStrings, the connection string for database which have "A_EF" table.
+  such as below for example,
+  "
+  <connectionStrings>
+    <add name="ef" connectionString="Data Source=CNWSGZISDL917\MESEFORM;Initial Catalog=DDit;User ID=sa;Password=amway123;"/>
+  </connectionStrings>  
+  "
+2 open "Install.bat", check the correct path for "DDit.OSISoft.SP2EF.exe"
+  it will be Project_Path\bin\Debug\DDit.OSISoft.SP2EF.exe, for example,
+  "
+  %CD%\bin\Debug\DDit.OSISoft.SP2EF.exe
+  "
+3 open "Uninstall.bat", check the correct path for "DDit.OSISoft.SP2EF.exe" 
+  it will be Project_Path\bin\Debug\DDit.OSISoft.SP2EF.exe, for example,
+  "
+  %CD%\bin\Debug\DDit.OSISoft.SP2EF.exe
+  "
+4 open "cmd" in adminstrator right
+
+5 change to Project_Path, for example
+ "
+ cd D:\workspace\Project_Code\DDit-Rapid-Development-Framework.git\branches\prerelease\DDit.OSISoft.SP2EF
+ "
+6 Run "Install.bat", if register service successfully, you will find the service which name is "SP2Service"  and its status is "running"
+
+7 Run "Uninstall.bat", if un-register service successfully, you will find the service which name is "SP2Service" is removed
+
+8 open "log\YYYY\YYYYMM\YYYYMMDD.txt" log file, for example, "log\2017\201708\20170813.txt", you will check the log records
+
+9 If the service which name is "SP2Service" run correctly, it will generate the EvenFrame, you can check the generated EventFrame in PI System Explorer
+
+10 After the EventFrames are generated, the record in "A_EF" will be updated to 2(2 stand for complete, other status are 0 - New, 1 - InProcess, 9 - MarkDown, MarkDown which means Error occur)
+
+
+
