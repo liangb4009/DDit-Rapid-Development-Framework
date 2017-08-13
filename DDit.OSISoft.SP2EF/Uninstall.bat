@@ -1,1 +1,1 @@
-%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\installutil.exe /u %CD%\DDit.OSISoft.SP2EF.exe
+%SystemRoot%\Microsoft.NET\Framework\v4.0.30319\installutil.exe /u %CD%\bin\Debug\DDit.OSISoft.SP2EF.exe
