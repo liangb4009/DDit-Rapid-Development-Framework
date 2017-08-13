@@ -1,0 +1,6 @@
+Install_SQLCLR
+1 connect to local database(for example, "DDit"), run "Create_A_EF.sql", to create structure of "A_EF" table;
+2 copy Project_Path\bin\Debug\DDit.OSISoft.SQLCLR.dll to another folder(for example, "D:\DDitSQLCLR");
+3 copy Project_Path\SQLCLRKey.snk to the same folder(for example, "D:\DDitSQLCLR");
+4 connect to local database, run Register_SQLCLR.sql(execute successfully, it will insert one record in "A_EF" table).
+install successfully!
