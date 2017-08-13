@@ -28,7 +28,9 @@ namespace DDit.Core.Data.Entity
         public List<Orderby> order { get; set; }
 
         [NotMapped]
-        public List<Datacolumn> columns { get; set; }          
+        public List<Datacolumn> columns { get; set; }
+
+
     }
 
 

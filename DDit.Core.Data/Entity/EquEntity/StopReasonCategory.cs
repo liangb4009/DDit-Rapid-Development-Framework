@@ -7,34 +7,22 @@ using System.Threading.Tasks;
 namespace DDit.Core.Data.Entity.EquEntity
 {
     /// <summary>
-    /// 停机原因
+    /// 停机原因类别
     /// </summary>
-    public class StopReason : BaseEntity
+    public class StopReasonCategory : BaseEntity
     {
         /// <summary>
         /// 唯一ID
         /// </summary>
         public Guid ID { get; set; }
         /// <summary>
-        /// 停机原因代码
+        /// 名字
         /// </summary>
-        public string Code { get; set; }
+        public string Name { get; set; }
         /// <summary>
-        /// 停机原因描述
+        /// 编码
         /// </summary>
-        public string Reason { get; set; }
-        /// <summary>
-        /// 上一级停机原因ID
-        /// </summary>
-        public Guid ParentId { get; set; }
-        /// <summary>
-        /// 停机原因完整编码
-        /// </summary>
-        public string FullCode { get; set; }
-        /// <summary>
-        /// 关联停机类别ID
-        /// </summary>
-        public Guid StopReasonCategoryId { get; set; }
+        public int Code { get; set; }
         /// <summary>
         /// 记录状态，1是创建，0是更新，-1 是删除
         /// </summary>

@@ -7,34 +7,38 @@ using System.Threading.Tasks;
 namespace DDit.Core.Data.Entity.EquEntity
 {
     /// <summary>
-    /// 停机原因
+    /// 停机记录
     /// </summary>
-    public class StopReason : BaseEntity
+    public class StopRecordHeader : BaseEntity
     {
         /// <summary>
         /// 唯一ID
         /// </summary>
         public Guid ID { get; set; }
         /// <summary>
-        /// 停机原因代码
+        /// 订单号
         /// </summary>
-        public string Code { get; set; }
+        public string OrderNumber { get; set; }
         /// <summary>
-        /// 停机原因描述
+        /// 订单日期
         /// </summary>
-        public string Reason { get; set; }
+        public DateTime OrderDate { get; set; }
         /// <summary>
-        /// 上一级停机原因ID
+        /// 订单班次
         /// </summary>
-        public Guid ParentId { get; set; }
+        public int ShiftCode { get; set; }
         /// <summary>
-        /// 停机原因完整编码
+        /// 停机记录类型，1是生产，0时非生产
         /// </summary>
-        public string FullCode { get; set; }
+        public bool IsProduction { get; set; }
         /// <summary>
-        /// 关联停机类别ID
+        /// 工作中心
         /// </summary>
-        public Guid StopReasonCategoryId { get; set; }
+        public string WorkCenterId { get; set; }
+        /// <summary>
+        /// 机台编码
+        /// </summary>
+        public string MachineId { get; set; }
         /// <summary>
         /// 记录状态，1是创建，0是更新，-1 是删除
         /// </summary>

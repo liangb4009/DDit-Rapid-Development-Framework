@@ -17,8 +17,8 @@ namespace DDit.Core.Data.Repository.Mapping.EquMapping
             this.Property(a => a.Code).HasColumnName("Code");
             this.Property(a => a.Reason).HasColumnName("Reason");
             this.Property(a => a.ParentId).HasColumnName("ParentId");
-            this.Property(a => a.IsDelete).HasColumnName("IsDelete");
-            this.Property(a => a.UnitCode).HasColumnName("UnitCode");
+            //this.Property(a => a.IsDelete).HasColumnName("IsDelete");
+            //this.Property(a => a.UnitCode).HasColumnName("UnitCode");
             this.Property(a => a.FullCode).HasColumnName("FullCode");
             this.Property(a => a.RecordStatus).HasColumnName("RecordStatus");
             this.Property(a => a.RecordLastEditDt).HasColumnName("RecordLastEditDt");

@@ -7,34 +7,42 @@ using System.Threading.Tasks;
 namespace DDit.Core.Data.Entity.EquEntity
 {
     /// <summary>
-    /// 停机原因
+    /// Oee计算变量
     /// </summary>
-    public class StopReason : BaseEntity
+    public class OeeVariable : BaseEntity
     {
         /// <summary>
-        /// 唯一ID
+        /// 变量ID
         /// </summary>
         public Guid ID { get; set; }
         /// <summary>
-        /// 停机原因代码
+        /// 变量名字
         /// </summary>
-        public string Code { get; set; }
+        public String Name { get; set; }
         /// <summary>
-        /// 停机原因描述
+        /// 变量计算公式
         /// </summary>
-        public string Reason { get; set; }
+        public String Expression { get; set; }
         /// <summary>
-        /// 上一级停机原因ID
+        /// 变量关联的Oee时间ID，没有为Null
         /// </summary>
-        public Guid ParentId { get; set; }
+        public Guid OeeTimeId { get; set; }
         /// <summary>
-        /// 停机原因完整编码
+        /// 变量关联的Oee产量ID，没有为Null
         /// </summary>
-        public string FullCode { get; set; }
+        public Guid OeeCountId { get; set; }
         /// <summary>
-        /// 关联停机类别ID
+        /// 变量关联的Oee指标ID，没有为Null
         /// </summary>
-        public Guid StopReasonCategoryId { get; set; }
+        public Guid OeeIndexId { get; set; }
+        /// <summary>
+        /// 返回值
+        /// </summary>
+        public Double Value { get; }
+        /// <summary>
+        /// 变量属于的公式ID
+        /// </summary>
+        public Guid OeeFormulaId { get; set; }
         /// <summary>
         /// 记录状态，1是创建，0是更新，-1 是删除
         /// </summary>

@@ -75,8 +75,24 @@
   <ItemGroup>
     <Compile Include="Entity\CoreEntity\News.cs" />
     <Compile Include="Entity\BaseEntity.cs" />
+    <Compile Include="Entity\EquEntity\Device.cs" />
+    <Compile Include="Entity\EquEntity\StopReasonCategory.cs" />
+    <Compile Include="Entity\EquEntity\OeeCount.cs" />
+    <Compile Include="Entity\EquEntity\OeeFormula.cs" />
+    <Compile Include="Entity\EquEntity\OeeIndex.cs" />
+    <Compile Include="Entity\EquEntity\OeeVariable.cs" />
     <Compile Include="Entity\EquEntity\StopReason.cs" />
+    <Compile Include="Entity\EquEntity\StopRecordHeader.cs" />
     <Compile Include="Entity\EquEntity\StopReasonView.cs" />
+    <Compile Include="Entity\EquEntity\OeeTime.cs" />
+    <Compile Include="Entity\EquEntity\StopRecordDetail.cs" />
+    <Compile Include="Entity\LineEntity\Line.cs" />
+    <Compile Include="Entity\LineEntity\LineStation.cs" />
+    <Compile Include="Entity\LineEntity\LineWorkCenter.cs" />
+    <Compile Include="Entity\LineEntity\Station.cs" />
+    <Compile Include="Entity\LineEntity\StationDevice.cs" />
+    <Compile Include="Entity\MatEntity\Item.cs" />
+    <Compile Include="Entity\MatEntity\Product.cs" />
     <Compile Include="Entity\SystemEntity\Button.cs" />
     <Compile Include="Entity\SystemEntity\Dictionary.cs" />
     <Compile Include="Entity\SystemEntity\DictionaryCategory.cs" />
@@ -86,6 +102,11 @@
     <Compile Include="Entity\SystemEntity\MenuMappingButton.cs" />
     <Compile Include="Entity\SystemEntity\RoleMappingButton.cs" />
     <Compile Include="Entity\SystemEntity\Test.cs" />
+    <Compile Include="Entity\UnitEntity\Unit.cs" />
+    <Compile Include="Entity\WoEntity\WoBatchStatus.cs" />
+    <Compile Include="Entity\WoEntity\WoMaster.cs" />
+    <Compile Include="Entity\WoEntity\WoRoutingcs.cs" />
+    <Compile Include="Entity\WorkCenterEntity\WorkCenter.cs" />
     <Compile Include="IRepositories\ICoreRepositories\INewsRepository.cs" />
     <Compile Include="IRepositories\IEquRepositories\IStopReasonRepository.cs" />
     <Compile Include="IRepositories\IEquRepositories\IStopReasonViewRepository.cs" />

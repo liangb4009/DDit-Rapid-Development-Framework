@@ -7,32 +7,40 @@ using System.Threading.Tasks;
 namespace DDit.Core.Data.Entity.EquEntity
 {
     /// <summary>
-    /// 停机原因
+    /// Oee时间
     /// </summary>
-    public class StopReason : BaseEntity
+    public class OeeTime : BaseEntity
     {
         /// <summary>
         /// 唯一ID
         /// </summary>
         public Guid ID { get; set; }
         /// <summary>
-        /// 停机原因代码
+        /// 名字
         /// </summary>
-        public string Code { get; set; }
+        public string Name { get; set; }
         /// <summary>
-        /// 停机原因描述
+        /// 编码
         /// </summary>
-        public string Reason { get; set; }
+        public int Code { get; set; }
         /// <summary>
-        /// 上一级停机原因ID
+        /// 时间长度
         /// </summary>
-        public Guid ParentId { get; set; }
+        public double TimeLength { get; set; }
         /// <summary>
-        /// 停机原因完整编码
+        /// 单位
         /// </summary>
-        public string FullCode { get; set; }
+        public string Unit { get; set; }
         /// <summary>
-        /// 关联停机类别ID
+        /// 上级OEE时间ID
+        /// </summary>
+        public Guid ParentOeeTimeId { get; set; }
+        /// <summary>
+        /// 下级OEE时间ID
+        /// </summary>
+        public Guid ChildOeeTimeId { get; set; }
+        /// <summary>
+        /// 时间关联的停机原因类别ID，没有为Null
         /// </summary>
         public Guid StopReasonCategoryId { get; set; }
         /// <summary>
