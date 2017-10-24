@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDit.OSISoft.SP2EF", "DDit.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDit.Component.Print.Demo", "DDit.Component.Print.Demo\DDit.Component.Print.Demo.csproj", "{0423E23C-F18A-42FC-A247-8AB73087827D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDit.OSISoft.VPlantOverAllForNu", "DDit.OSISoft.VPlantOverAllForNu\DDit.OSISoft.VPlantOverAllForNu.csproj", "{21079F94-D3BB-4E54-BFCF-3AF95847BD69}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{0423E23C-F18A-42FC-A247-8AB73087827D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0423E23C-F18A-42FC-A247-8AB73087827D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0423E23C-F18A-42FC-A247-8AB73087827D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21079F94-D3BB-4E54-BFCF-3AF95847BD69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21079F94-D3BB-4E54-BFCF-3AF95847BD69}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21079F94-D3BB-4E54-BFCF-3AF95847BD69}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21079F94-D3BB-4E54-BFCF-3AF95847BD69}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -75,5 +81,6 @@ Global
 		{7756E4B7-00FB-4FF5-A151-479EF1090C3B} = {F14AED55-853C-46F2-A113-D3AB3D3C9DD4}
 		{AFFE2398-AB7A-49B3-9D2D-65348BAE0CF8} = {F14AED55-853C-46F2-A113-D3AB3D3C9DD4}
 		{0423E23C-F18A-42FC-A247-8AB73087827D} = {2FAF5677-BBB6-43BD-9D9C-59A27A1E9E62}
+		{21079F94-D3BB-4E54-BFCF-3AF95847BD69} = {F14AED55-853C-46F2-A113-D3AB3D3C9DD4}
 	EndGlobalSection
 EndGlobal
