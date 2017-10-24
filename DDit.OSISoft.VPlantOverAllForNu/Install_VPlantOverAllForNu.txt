@@ -1,0 +1,13 @@
+Install VPlantOverAllForNu
+1 open "Install.bat", check the correct path for "DDit.OSISoft.VPlantOverAllForNu.dll"
+  it will be Project_Path\bin\Debug\DDit.OSISoft.VPlantOverAllForNu.dll, for example,
+  "
+  %CD%\bin\Debug\DDit.OSISoft.VPlantOverAllForNu.dll
+  "
+2 open "cmd" in adminstrator right
+3 change to Project_Path, for example
+ "
+ cd D:\workspace\Project_Code\DDit-Rapid-Development-Framework.git\branches\prerelease\DDit.OSISoft.VPlantOverAllForNu
+ "
+3 Run "Install.bat", if register service successfully, you will find the DataReference Plugin which name is "VPlantOverAllForNu"
+
