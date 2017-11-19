@@ -432,7 +432,7 @@
                                 <ul>
                                     @foreach (var itemchild in item.Childs)
                                     {
-                                        <li data-id="@itemchild.MenuID" data-btn="@(BaseController.SerializeObject(itemchild.mbList))">
+                                        <li data-id="@itemchild.MenuID" >
                                             @itemchild.MenuName
                                             @{
                                         if (itemchild.Childs != null && itemchild.Childs.Count > 0)
