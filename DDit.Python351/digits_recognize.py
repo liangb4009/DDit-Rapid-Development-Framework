@@ -8,9 +8,12 @@ from PIL import Image
 import ReadDigits
 import numpy as np
 
-WorkSpacePath = os.path.abspath(os.path.join(os.curdir, "Tensorflow_4_models\\"))
-MetaFile = "Tensorflow4.ckpt.meta"
-ModelFile = "Tensorflow4.ckpt"
+# WorkSpacePath = os.path.abspath(os.path.join(os.curdir, "Tensorflow_4_models\\"))
+# MetaFile = "Tensorflow4.ckpt.meta"
+# ModelFile = "Tensorflow4.ckpt"
+WorkSpacePath = os.path.abspath(os.path.join(os.curdir, "Tensorflow_5_models\\"))
+MetaFile = "Tensorflow5.ckpt-19.meta"
+ModelFile = "Tensorflow5.ckpt-19"
 SrcImgFile = "SrcHandWrite.jpg"
 ImgFile = "HandWrite.jpg"
 CropFile = "CropFile"

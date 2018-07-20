@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 import os
 #1 加载数据集，分开输入和结果
-train = pd.read_csv(r"C:\Users\CN093128\Desktop\生产管理控制\2018-07-13 No.81 [其他]-识别手工数字\all\train.csv")
+train = pd.read_csv(r"C:\Users\CN093128\Desktop\生产管理控制\2018-07-13 No.81 [图像识别]-识别手工数字\all\train.csv")
 images = train.iloc[:,1:].values
 labels_flat = train.iloc[:,0:1].values.ravel()
 #2 处理输入
