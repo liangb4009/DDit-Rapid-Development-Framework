@@ -51,6 +51,7 @@ class CamReader(object):
     def __init__(self,handler):
         self.isrun = False
         self.thread = threading.Thread(target=self.run)
+        self.event = threading.Event()
         self.handler = handler
         self.CV_SYSTEM_CACHE_CNT = 5
         self.LOOP_INTERVAL_TIME = 0.2
@@ -83,7 +84,6 @@ class CamReader(object):
             print ('CamReader - run')
             if self.handler.need_stop():
                 break
-            self.isrun = True
             # explanation for this in
             # http://stackoverflow.com/a/35283646/5781248
             for i in range(0, self.CV_SYSTEM_CACHE_CNT):
@@ -92,8 +92,6 @@ class CamReader(object):
             self.handler.send_frame(img)
             time.sleep(self.LOOP_INTERVAL_TIME)
         self.camera.release()
-        self.isrun = False
-
 
 #应用程序类
 class Application(object):
@@ -103,16 +101,28 @@ class Application(object):
         self.root = root
         self.root.title('缺陷识别系统-多摄像头')
         #选择摄像头相关
-        self.cameraid = None#默认读取摄像头为None
+        self.cameraid0 = None#默认读取摄像头为None
+        self.cameraid1 = None#默认读取摄像头为None
+        self.cameraid2 = None#默认读取摄像头为None
+        self.cameraid3 = None#默认读取摄像头为None
+        self.cameraid4 = None#默认读取摄像头为None
         self.selectCamera = SelectCamera(self.root,self)
         self.selectCamera.iconify()
-        self.LOOP_INTERVAL_TIME = 1
+        self.LOOP_INTERVAL_TIME = 4
         #摄像头读取相关
         self.camera = None
-        self.camReader = None
+        self.camReader0 = None
+        self.camReader1 = None
+        self.camReader2 = None
+        self.camReader3 = None
+        self.camReader4 = None
         self.lock = threading.Lock()
         self.stop_event = threading.Event()
-        self.frames = []
+        self.frames0 = []
+        self.frames1 = []
+        self.frames2 = []
+        self.frames3 = []
+        self.frames4 = []
         #图片路径相关
         self.srcFolderPath = os.path.abspath(os.path.join(os.curdir, "DefectRecognize\\"))
         self.backGround = "Background.JPG"
@@ -123,8 +133,11 @@ class Application(object):
         self.white = "White.JPG"
         self.defects = "Defects.JPG"
         self.digits = "Digits.JPG"
+        #程序界面控件相关
         self.lframe = tk.Frame(self.root)
         self.lframe.grid(row=0,column=0)
+        self.rframe = tk.Frame(self.root)
+        self.rframe.grid(row=0,column=1)
         self.createWidgets()
         self.bindEvents()
         #颜色相关
@@ -134,7 +147,11 @@ class Application(object):
         self.color = self.green
         #线条宽度
         self.linewidth = 2
-
+        #打开摄像头按钮相关
+        self.isCameraOpen = False
+        self.isCameraClose = False
+        #拍摄照片
+        self.Images = {}
     #点击右上角X关闭事件
     def closeWindow(self):
         print ('点击右上角X关闭事件')
@@ -142,26 +159,69 @@ class Application(object):
             self.quit()
         else:
             return
-
     #创建控件
     def createWidgets(self):
         print ('创建控件')
-        self.lbl_Msg = tk.Label(self.lframe)
-        self.lbl_Msg.grid(row=0,column=0,columnspan=4)
+        #视频显示区
+        self.lbl_Msg_0 = tk.Label(self.lframe)
+        self.lbl_Msg_0.grid(row=0,column=0,columnspan=2)
+        self.lbl_Msg_1 = tk.Label(self.lframe)
+        self.lbl_Msg_1.grid(row=0,column=2,columnspan=2)
+        self.lbl_Msg_2 = tk.Label(self.lframe)
+        self.lbl_Msg_2.grid(row=1,column=0,columnspan=2)
+        self.lbl_Msg_3 = tk.Label(self.lframe)
+        self.lbl_Msg_3.grid(row=1,column=2,columnspan=2)
+        self.lbl_Msg_4 = tk.Label(self.lframe)
+        self.lbl_Msg_4.grid(row=2,column=0,columnspan=2)
         self.btn_OpenCamera = tk.Button(self.lframe, text="打开摄像头",command=self.btn_OpenCamera)
-        self.btn_OpenCamera.grid(row=1,column=0)
+        self.btn_OpenCamera.grid(row=3,column=0)
+        self.btn_GetPictures = tk.Button(self.lframe, text="抓拍照片",command=self.btn_GetPictures)
+        self.btn_GetPictures.grid(row=3, column=1)
         self.btn_Exit = tk.Button(self.lframe, text="退出系统", command=self.btn_Exit)
-        self.btn_Exit.grid(row=1,column=2)
-
+        self.btn_Exit.grid(row=3,column=2)
+        #抓取照片显示区
+        self.lbl_Pic_0 = tk.Label(self.rframe)
+        self.lbl_Pic_0.grid(row=0,column=0)
+        self.lbl_Pic_1 = tk.Label(self.rframe)
+        self.lbl_Pic_1.grid(row=1,column=0)
+        self.lbl_Pic_2 = tk.Label(self.rframe)
+        self.lbl_Pic_2.grid(row=2,column=0)
+        self.lbl_Pic_3 = tk.Label(self.rframe)
+        self.lbl_Pic_3.grid(row=3,column=0)
+        self.lbl_Pic_4 = tk.Label(self.rframe)
+        self.lbl_Pic_4.grid(row=4,column=0)
+    #抓拍照片
+    def btn_GetPictures(self):
+        print ('抓拍照片')
+        if self.camReader0!= None and self.selectCamera.cameraid == 0:
+            imgtk0 = ImageTk.PhotoImage(image=Image.fromarray(self.Images[0]))
+            self.lbl_Pic_0.image = imgtk0
+            self.lbl_Pic_0.configure(image=imgtk0)
+        else:
+            imgtk1 = ImageTk.PhotoImage(image=Image.fromarray(self.Images[1]))
+            imgtk2 = ImageTk.PhotoImage(image=Image.fromarray(self.Images[2]))
+            imgtk3 = ImageTk.PhotoImage(image=Image.fromarray(self.Images[3]))
+            imgtk4 = ImageTk.PhotoImage(image=Image.fromarray(self.Images[4]))
+            self.lbl_Pic_1.image = imgtk1
+            self.lbl_Pic_1.configure(image=imgtk1)
+            self.lbl_Pic_2.image = imgtk2
+            self.lbl_Pic_2.configure(image=imgtk2)
+            self.lbl_Pic_3.image = imgtk3
+            self.lbl_Pic_3.configure(image=imgtk3)
+            self.lbl_Pic_4.image = imgtk4
+            self.lbl_Pic_4.configure(image=imgtk4)
     #绑定事件
     def bindEvents(self):
         print ('绑定事件')
         #绑定帧回传事件
-        self.root.bind("<<ScannerFrame>>",self.on_frame)
+        self.root.bind("<<ScannerFrame0>>",self.on_frame0)
+        self.root.bind("<<ScannerFrame1>>",self.on_frame1)
+        self.root.bind("<<ScannerFrame2>>",self.on_frame2)
+        self.root.bind("<<ScannerFrame3>>",self.on_frame3)
+        self.root.bind("<<ScannerFrame4>>",self.on_frame4)
         self.root.protocol('WM_DELETE_WINDOW', self.closeWindow)
         #绑定选择摄像头退出事件
         self.root.bind('<<SelectCameraQuit>>',self.openCamera)
-
     #退出系统
     def btn_Exit(self):
         print ('退出系统')
@@ -169,77 +229,245 @@ class Application(object):
             self.quit()
         else:
             return
-
     #通用退出系统方法，适用于Exit按钮和右上角X
     def quit(self):
         self.stop_event.set()
+        time.sleep(self.LOOP_INTERVAL_TIME)
         if(self.camera!=None):
             self.camera.release()
         cv2.destroyAllWindows()
         self.root.destroy()
-
     #点击打开摄像头按钮
     def btn_OpenCamera(self):
-        print ('点击打开摄像头按钮')
+        if self.isCameraOpen == False:
+            self.isCameraOpen = True
+            self.btn_OpenCamera.configure(text="切换摄像头")
+        else:
+            self.isCameraOpen = False
+            self.btn_OpenCamera.configure(text="切换摄像头")
         self.selectCamera.start()
+    #重新排列图片位置
+    def reArrangeGrid(self):
+        #如果选择电脑自带摄像头,所有图像合并在一起，只显示Label0
+        if self.selectCamera.cameraid == 0:
+            self.lbl_Msg_0.grid(row=0,column=0, columnspan=2)
+            self.lbl_Msg_4.grid_forget()
+            self.lbl_Msg_3.grid_forget()
+            self.lbl_Msg_2.grid_forget()
+            self.lbl_Msg_1.grid_forget()
+            self.lbl_Pic_0.grid(row=0,column=0)
+            self.lbl_Pic_1.grid_forget()
+            self.lbl_Pic_2.grid_forget()
+            self.lbl_Pic_3.grid_forget()
+            self.lbl_Pic_4.grid_forget()
+        #如果选择MindVision摄像头，只显示Label1,2,3,4, Label0放到第一个位置
+        if self.selectCamera.cameraid == 1:
+            self.lbl_Msg_1.grid(row=0,column=0, columnspan=2)
+            self.lbl_Msg_2.grid(row=0,column=2, columnspan=2)
+            self.lbl_Msg_3.grid(row=1,column=0, columnspan=2)
+            self.lbl_Msg_4.grid(row=1,column=2, columnspan=2)
+            self.lbl_Msg_0.grid_forget()
+            self.lbl_Pic_1.grid(row=0,column=0)
+            self.lbl_Pic_2.grid(row=1,column=0)
+            self.lbl_Pic_3.grid(row=2,column=0)
+            self.lbl_Pic_4.grid(row=3,column=0)
+            self.lbl_Pic_0.grid_forget()
 
+        self.root.update()
     #打开摄像头
     def openCamera(self, *args):
+        print ('重新排列图片')
+        self.reArrangeGrid()
         print ('打开摄像头')
-        self.cameraid = self.selectCamera.cameraid
-        class Handler(object):
-            cameraid = self.selectCamera.cameraid
+        #公用句柄0
+        class Handler0(object):
+            cameraid = 0
+            def need_stop(self_):
+                return self.stop_event.is_set()
+            def send_frame(self_, frame):
+                self.lock.acquire(True)
+                self.frames0.append(frame)
+                self.lock.release()
+                self.root.event_generate('<<ScannerFrame0>>', when='tail')
+        #公用句柄1
+        class Handler1(object):
+            cameraid = 1
+            def need_stop(self_):
+                return self.stop_event.is_set()
+            def send_frame(self_, frame):
+                self.lock.acquire(True)
+                self.frames1.append(frame)
+                self.lock.release()
+                self.root.event_generate('<<ScannerFrame1>>', when='tail')
+        #公用句柄2
+        class Handler2(object):
+            cameraid = 2
+            def need_stop(self_):
+                return self.stop_event.is_set()
+            def send_frame(self_, frame):
+                self.lock.acquire(True)
+                self.frames2.append(frame)
+                self.lock.release()
+                self.root.event_generate('<<ScannerFrame2>>', when='tail')
+        #公用句柄3
+        class Handler3(object):
+            cameraid = 3
             def need_stop(self_):
                 return self.stop_event.is_set()
             def send_frame(self_, frame):
                 print ('send_frame')
                 self.lock.acquire(True)
-                self.frames.append(frame)
+                self.frames3.append(frame)
                 self.lock.release()
-                self.root.event_generate('<<ScannerFrame>>', when='tail')
-        #切换摄像头前需要关闭前一个摄像头
-        if self.camReader != None:
-            self.stop_event.set()
-            time.sleep(self.LOOP_INTERVAL_TIME)
-            if self.camReader.isrun == False:
-                print ('关闭前一个摄像头成功')
-                self.camReader = None
-        #打开另一个摄像头前，清除停止标记
-        self.stop_event.clear()
+                self.root.event_generate('<<ScannerFrame3>>', when='tail')
+        #公用句柄4
+        class Handler4(object):
+            cameraid = 4
+            def need_stop(self_):
+                return self.stop_event.is_set()
+            def send_frame(self_, frame):
+                print ('send_frame')
+                self.lock.acquire(True)
+                self.frames4.append(frame)
+                self.lock.release()
+                self.root.event_generate('<<ScannerFrame4>>', when='tail')
         # 保证只打开一个线程
-        if self.camReader == None:
-            self.camReader = CamReader(Handler())
-            self.camReader.start()
-        # 打开摄像头后，设置roiRegion为初始值，保证Roiregion信息输出为(0,0,0,0)
-        self.roiRegion = (0,0,0,0)
-
+        if self.camReader0 == None and self.selectCamera.cameraid==0:
+            self.camReader0 = CamReader(Handler0())
+            self.camReader0.start()
+        # 保证只打开一个线程
+        if self.camReader1 == None and self.selectCamera.cameraid==1:
+            self.camReader1 = CamReader(Handler1())
+            self.camReader1.start()
+        # 保证只打开一个线程
+        if self.camReader2 == None and self.selectCamera.cameraid == 1:
+            self.camReader2 = CamReader(Handler2())
+            self.camReader2.start()
+        # 保证只打开一个线程
+        if self.camReader3 == None and self.selectCamera.cameraid == 1:
+            self.camReader3 = CamReader(Handler3())
+            self.camReader3.start()
+        # 保证只打开一个线程
+        if self.camReader4 == None and self.selectCamera.cameraid == 1:
+            self.camReader4 = CamReader(Handler4())
+            self.camReader4.start()
     #帧触发事件
-    def on_frame(self, *args):
+    def on_frame4(self, *args):
+        #初始化各种临时结果
+        print ('帧触发事件4')
+        self.cameraid4 = 4
+        #获取四个图像各自帧
+        self.lock.acquire(True)
+        frame4 = self.frames4.pop(0)
+        self.lock.release()
+        _,img4 = frame4
+        # 在当前帧上写瓶子状态以及时间戳
+        cv2.putText(img4, "Camera:{}".format(self.cameraid4),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
+        cv2.putText(img4, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img4.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+        cv2image4 = cv2.cvtColor(img4, cv2.COLOR_BGR2RGB)
+        cv2image4_resize_1 = cv2.resize(cv2image4,(320,240),0,0,cv2.INTER_CUBIC)
+        cv2image4_resize_2 = cv2.resize(cv2image4,(160,120),0,0,cv2.INTER_CUBIC)
+        self.Images[4] = cv2image4_resize_2
+        self.img4 = Image.fromarray(cv2image4_resize_1)
+        imgtk4 = ImageTk.PhotoImage(image=self.img4)
+        #图像显示在Label上
+        self.lbl_Msg_4.image = imgtk4
+        self.lbl_Msg_4.configure(image=imgtk4)
+    def on_frame3(self, *args):
+        #初始化各种临时结果
+        print ('帧触发事件3')
+        self.cameraid3 = 3
+        #获取四个图像各自帧
+        self.lock.acquire(True)
+        frame3 = self.frames3.pop(0)
+        self.lock.release()
+        _,img3 = frame3
+        # 在当前帧上写瓶子状态以及时间戳
+        cv2.putText(img3, "Camera:{}".format(self.cameraid3),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
+        cv2.putText(img3, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img3.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+        cv2image3 = cv2.cvtColor(img3, cv2.COLOR_BGR2RGB)
+        cv2image3_resize_1 = cv2.resize(cv2image3,(320,240),0,0,cv2.INTER_CUBIC)
+        cv2image3_resize_2 = cv2.resize(cv2image3,(160,120),0,0,cv2.INTER_CUBIC)
+        self.Images[3] = cv2image3_resize_2
+        self.img3 = Image.fromarray(cv2image3_resize_1)
+        imgtk3 = ImageTk.PhotoImage(image=self.img3)
+        #图像显示在Label上
+        self.lbl_Msg_3.image = imgtk3
+        self.lbl_Msg_3.configure(image=imgtk3)
+    def on_frame2(self, *args):
+        # 初始化各种临时结果
+        print('帧触发事件2')
+        self.cameraid2 = 2
+        # 获取四个图像各自帧
+        self.lock.acquire(True)
+        frame2 = self.frames2.pop(0)
+        self.lock.release()
+        _, img2 = frame2
+        # 在当前帧上写瓶子状态以及时间戳
+        cv2.putText(img2, "Camera:{}".format(self.cameraid2), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color,
+                    self.linewidth)
+        cv2.putText(img2, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, img2.shape[0] - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+        cv2image2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
+        cv2image2_resize_1 = cv2.resize(cv2image2, (320, 240), 0, 0, cv2.INTER_CUBIC)
+        cv2image2_resize_2 = cv2.resize(cv2image2, (160, 120), 0, 0, cv2.INTER_CUBIC)
+        self.Images[2] = cv2image2_resize_2
+
+        self.img2 = Image.fromarray(cv2image2_resize_1)
+        imgtk2 = ImageTk.PhotoImage(image=self.img2)
+
+        # 图像显示在Label上
+        self.lbl_Msg_2.image = imgtk2
+        self.lbl_Msg_2.configure(image=imgtk2)
+    def on_frame1(self, *args):
+        # 初始化各种临时结果
+        print('帧触发事件1')
+        self.cameraid1 = 1
+        # 获取四个图像各自帧
+        self.lock.acquire(True)
+        frame1 = self.frames1.pop(0)
+        self.lock.release()
+        _, img1 = frame1
+        # 在当前帧上写瓶子状态以及时间戳
+        cv2.putText(img1, "Camera:{}".format(self.cameraid1), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color,
+                    self.linewidth)
+        cv2.putText(img1, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, img1.shape[0] - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+
+        cv2image1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+        cv2image1_resize_1 = cv2.resize(cv2image1, (320, 240), 0, 0, cv2.INTER_CUBIC)
+        cv2image1_resize_2 = cv2.resize(cv2image1, (160,120), 0,0, cv2.INTER_CUBIC)
+        self.Images[1] = cv2image1_resize_2
+        self.img1 = Image.fromarray(cv2image1_resize_1)
+        imgtk1 = ImageTk.PhotoImage(image=self.img1)
+
+        # 图像显示在Label上
+        self.lbl_Msg_1.image = imgtk1
+        self.lbl_Msg_1.configure(image=imgtk1)
+    def on_frame0(self, *args):
         #初始化各种临时结果
         print ('帧触发事件')
+        self.cameraid0 = 0
+        #获取四个图像各自帧
         self.lock.acquire(True)
-        frame = self.frames.pop(0)
+        frame0 = self.frames0.pop(0)
         self.lock.release()
-        _,img = frame
-        #先保存原始图像用来生成背景图
-        imgSave = img.copy()
+        _,img0 = frame0
         # 在当前帧上写瓶子状态以及时间戳
-        cv2.putText(img, "Camera:{}".format(self.cameraid),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
-        cv2.putText(img, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+        cv2.putText(img0, "Camera:{}".format(self.cameraid0),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
+        cv2.putText(img0, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img0.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
 
-        cv2image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        self.img = Image.fromarray(cv2image)
-        imgtk = ImageTk.PhotoImage(image=self.img)
-        self.lbl_Msg.image = imgtk
-        self.lbl_Msg.configure(image=imgtk)
+        cv2image0 = cv2.cvtColor(img0, cv2.COLOR_BGR2RGB)
+        cv2image0_resize_1 = cv2.resize(cv2image0,(320,240),0,0,cv2.INTER_CUBIC)
+        cv2image0_resize_2 = cv2.resize(cv2image0,(160,120),0,0,cv2.INTER_CUBIC)
+        self.Images[0] = cv2image0_resize_2
 
-    #识别数字事件
-    def on_result(self, *args):
-        print ('识别数字事件')
-        #self.lock.acquire(True)
-        #result = self.results.pop(0)
-        #self.lock.release()
-        #print (result)
+        self.img0 = Image.fromarray(cv2image0_resize_1)
+        imgtk0 = ImageTk.PhotoImage(image=self.img0)
+
+        #图像显示在Label上
+        self.lbl_Msg_0.image = imgtk0
+        self.lbl_Msg_0.configure(image=imgtk0)
 
 def main():
     root = tk.Tk()
