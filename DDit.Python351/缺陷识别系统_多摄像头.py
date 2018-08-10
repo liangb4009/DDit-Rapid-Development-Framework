@@ -27,7 +27,7 @@ class SelectCamera(tk.Toplevel):
            self.rdb_camera = tk.Radiobutton(self, text=text, variable=self.clas_v, value=cameracode, command=self.rdbClass)
            self.rdb_camera.grid(row=0,column=col)
            #self.rdb_camera.pack()
-        self.btn_Close = tk.Button(self, text='切换摄像头', command=self.btn_Close)
+        self.btn_Close = tk.Button(self, text='切换摄像头', command=self.btn_Close, name="btn_Close")
         self.btn_Close.grid(row=1,column=0)
         #self.btn_Close.pack()
         self.protocol('WM_DELETE_WINDOW', self.closeWindow)
@@ -152,6 +152,20 @@ class Application(object):
         self.isCameraClose = False
         #拍摄照片
         self.Images = {}
+        #拍摄白瓶照片
+        self.WhiteImages = {}
+        #鼠标相关
+        self.drawRectangle = False
+        self.mouseorg = (0,0)
+        self.mouseend = (0,0)
+        self.mouseevent = None
+        #ROI区域相关
+        self.roiForWhite = {}
+        self.isSaveRoiForWhite = False
+        self.isSaveRoiForWhite1 = False
+        self.isSaveRoiForWhite2 = False
+        self.isSaveRoiForWhite3 = False
+        self.isSaveRoiForWhite4 = False
     #点击右上角X关闭事件
     def closeWindow(self):
         print ('点击右上角X关闭事件')
@@ -163,33 +177,68 @@ class Application(object):
     def createWidgets(self):
         print ('创建控件')
         #视频显示区
-        self.lbl_Msg_0 = tk.Label(self.lframe)
+        self.lbl_Msg_0 = tk.Label(self.lframe, text="本机摄像头")
         self.lbl_Msg_0.grid(row=0,column=0,columnspan=2)
-        self.lbl_Msg_1 = tk.Label(self.lframe)
+        self.lbl_Msg_1 = tk.Label(self.lframe, text="摄像头1")
         self.lbl_Msg_1.grid(row=0,column=2,columnspan=2)
-        self.lbl_Msg_2 = tk.Label(self.lframe)
+        self.lbl_Msg_2 = tk.Label(self.lframe, text="摄像头2")
         self.lbl_Msg_2.grid(row=1,column=0,columnspan=2)
-        self.lbl_Msg_3 = tk.Label(self.lframe)
+        self.lbl_Msg_3 = tk.Label(self.lframe, text="摄像头3")
         self.lbl_Msg_3.grid(row=1,column=2,columnspan=2)
-        self.lbl_Msg_4 = tk.Label(self.lframe)
+        self.lbl_Msg_4 = tk.Label(self.lframe, text="摄像头4")
         self.lbl_Msg_4.grid(row=2,column=0,columnspan=2)
-        self.btn_OpenCamera = tk.Button(self.lframe, text="打开摄像头",command=self.btn_OpenCamera)
+        self.btn_OpenCamera = tk.Button(self.lframe, text="打开摄像头", command=self.btn_OpenCamera)
         self.btn_OpenCamera.grid(row=3,column=0)
-        self.btn_GetPictures = tk.Button(self.lframe, text="抓拍照片",command=self.btn_GetPictures)
-        self.btn_GetPictures.grid(row=3, column=1)
-        self.btn_Exit = tk.Button(self.lframe, text="退出系统", command=self.btn_Exit)
-        self.btn_Exit.grid(row=3,column=2)
+        self.btn_SaveROIForWhite = tk.Button(self.lframe, text="保存区域", command=self.save_ROIForWhite)
+        self.btn_SaveROIForWhite.grid(row=3,column=1)
+        self.btn_GetPictures = tk.Button(self.lframe, text="抓拍照片", command=self.btn_GetPictures)
+        self.btn_GetPictures.grid(row=3, column=2)
+        self.btn_GetWhitePictures = tk.Button(self.lframe, text="抓拍白瓶", command=self.btn_GetWhitePictures)
+        self.btn_GetWhitePictures.grid(rows=4, column=0)
+        self.btn_Exit = tk.Button(self.lframe, text="退出系统", textvariable="退出系统", command=self.btn_Exit)
+        self.btn_Exit.grid(row=4,column=1)
         #抓取照片显示区
-        self.lbl_Pic_0 = tk.Label(self.rframe)
+        self.lbl_Pic_0 = tk.Label(self.rframe, text="")
         self.lbl_Pic_0.grid(row=0,column=0)
-        self.lbl_Pic_1 = tk.Label(self.rframe)
+        self.lbl_Pic_1 = tk.Label(self.rframe, text="")
         self.lbl_Pic_1.grid(row=1,column=0)
-        self.lbl_Pic_2 = tk.Label(self.rframe)
+        self.lbl_Pic_2 = tk.Label(self.rframe, text="")
         self.lbl_Pic_2.grid(row=2,column=0)
-        self.lbl_Pic_3 = tk.Label(self.rframe)
+        self.lbl_Pic_3 = tk.Label(self.rframe, text="")
         self.lbl_Pic_3.grid(row=3,column=0)
-        self.lbl_Pic_4 = tk.Label(self.rframe)
+        self.lbl_Pic_4 = tk.Label(self.rframe, text="")
         self.lbl_Pic_4.grid(row=4,column=0)
+        #抓取白瓶ROI区域显示区
+        self.lbl_Pic_5 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_5.grid(row=0, column=1)
+        self.lbl_Pic_6 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_6.grid(row=1, column=1)
+        self.lbl_Pic_7 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_7.grid(row=2, column=1)
+        self.lbl_Pic_8 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_8.grid(row=3, column=1)
+        self.lbl_Pic_9 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_9.grid(row=4,column=1)
+    #抓拍白瓶
+    def btn_GetWhitePictures(self):
+        print ('抓拍白瓶')
+        if self.camReader0!= None and self.selectCamera.cameraid == 0:
+            imgtk5 = ImageTk.PhotoImage(image=Image.fromarray(self.WhiteImages[0]))
+            self.lbl_Pic_5.image = imgtk5
+            self.lbl_Pic_5.configure(image=imgtk5)
+        else:
+            imgtk6 = ImageTk.PhotoImage(image=Image.fromarray(self.WhiteImages[1]))
+            imgtk7 = ImageTk.PhotoImage(image=Image.fromarray(self.WhiteImages[2]))
+            imgtk8 = ImageTk.PhotoImage(image=Image.fromarray(self.WhiteImages[3]))
+            imgtk9 = ImageTk.PhotoImage(image=Image.fromarray(self.WhiteImages[4]))
+            self.lbl_Pic_6.image = imgtk6
+            self.lbl_Pic_6.configure(image=imgtk6)
+            self.lbl_Pic_7.image = imgtk7
+            self.lbl_Pic_7.configure(image=imgtk7)
+            self.lbl_Pic_8.image = imgtk8
+            self.lbl_Pic_8.configure(image=imgtk8)
+            self.lbl_Pic_9.image = imgtk9
+            self.lbl_Pic_9.configure(image=imgtk9)
     #抓拍照片
     def btn_GetPictures(self):
         print ('抓拍照片')
@@ -222,6 +271,10 @@ class Application(object):
         self.root.protocol('WM_DELETE_WINDOW', self.closeWindow)
         #绑定选择摄像头退出事件
         self.root.bind('<<SelectCameraQuit>>',self.openCamera)
+        #绑定鼠标事件
+        self.root.bind("<ButtonPress-1>",self.bp_l)
+        self.root.bind("<Motion>",self.motion)
+        self.root.bind("<ButtonRelease-1>",self.br_l)
     #退出系统
     def btn_Exit(self):
         print ('退出系统')
@@ -260,6 +313,11 @@ class Application(object):
             self.lbl_Pic_2.grid_forget()
             self.lbl_Pic_3.grid_forget()
             self.lbl_Pic_4.grid_forget()
+            self.lbl_Pic_5.grid(row=0,column=1)
+            self.lbl_Pic_6.grid_forget()
+            self.lbl_Pic_7.grid_forget()
+            self.lbl_Pic_8.grid_forget()
+            self.lbl_Pic_9.grid_forget()
         #如果选择MindVision摄像头，只显示Label1,2,3,4, Label0放到第一个位置
         if self.selectCamera.cameraid == 1:
             self.lbl_Msg_1.grid(row=0,column=0, columnspan=2)
@@ -272,6 +330,11 @@ class Application(object):
             self.lbl_Pic_3.grid(row=2,column=0)
             self.lbl_Pic_4.grid(row=3,column=0)
             self.lbl_Pic_0.grid_forget()
+            self.lbl_Pic_6.grid(row=0,column=1)
+            self.lbl_Pic_7.grid(row=1,column=1)
+            self.lbl_Pic_8.grid(row=2,column=1)
+            self.lbl_Pic_9.grid(row=3,column=1)
+            self.lbl_Pic_5.grid_forget()
 
         self.root.update()
     #打开摄像头
@@ -364,8 +427,16 @@ class Application(object):
         # 在当前帧上写瓶子状态以及时间戳
         cv2.putText(img4, "Camera:{}".format(self.cameraid4),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
         cv2.putText(img4, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img4.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+
         cv2image4 = cv2.cvtColor(img4, cv2.COLOR_BGR2RGB)
         cv2image4_resize_1 = cv2.resize(cv2image4,(320,240),0,0,cv2.INTER_CUBIC)
+        # 在当前帧上写绘制矩形
+        if(self.isSaveRoiForWhite4==True):
+            cv2.rectangle(cv2image4_resize_1, self.roiForWhite[3][0], self.roiForWhite[3][1], self.color, self.linewidth)
+        if(self.isSaveRoiForWhite4==False and self.checkInRegionN(4)):
+            cv2.rectangle(cv2image4_resize_1,self.mouseorg,self.mouseend, self.color,self.linewidth)
+            self.roiForWhite[3] = (self.mouseorg,self.mouseend)
+            self.WhiteImages[4] = cv2image4_resize_1[self.roiForWhite[3][0][1]+self.linewidth:self.roiForWhite[3][1][1]-self.linewidth,self.roiForWhite[3][0][0]+self.linewidth:self.roiForWhite[3][1][0]-self.linewidth]
         cv2image4_resize_2 = cv2.resize(cv2image4,(160,120),0,0,cv2.INTER_CUBIC)
         self.Images[4] = cv2image4_resize_2
         self.img4 = Image.fromarray(cv2image4_resize_1)
@@ -385,8 +456,17 @@ class Application(object):
         # 在当前帧上写瓶子状态以及时间戳
         cv2.putText(img3, "Camera:{}".format(self.cameraid3),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
         cv2.putText(img3, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img3.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+
         cv2image3 = cv2.cvtColor(img3, cv2.COLOR_BGR2RGB)
         cv2image3_resize_1 = cv2.resize(cv2image3,(320,240),0,0,cv2.INTER_CUBIC)
+        # 在当前帧上写绘制矩形
+        if(self.isSaveRoiForWhite3==True):
+            cv2.rectangle(cv2image3_resize_1, self.roiForWhite[2][0], self.roiForWhite[2][1], self.color, self.linewidth)
+        if(self.isSaveRoiForWhite3 == False and self.checkInRegionN(3)):
+            cv2.rectangle(cv2image3_resize_1,self.mouseorg,self.mouseend, self.color,self.linewidth)
+            self.roiForWhite[2] = (self.mouseorg,self.mouseend)
+            self.WhiteImages[3] = cv2image3_resize_1[self.roiForWhite[2][0][1]+self.linewidth:self.roiForWhite[2][1][1]-self.linewidth,self.roiForWhite[2][0][0]+self.linewidth:self.roiForWhite[2][1][0]-self.linewidth]
+
         cv2image3_resize_2 = cv2.resize(cv2image3,(160,120),0,0,cv2.INTER_CUBIC)
         self.Images[3] = cv2image3_resize_2
         self.img3 = Image.fromarray(cv2image3_resize_1)
@@ -408,8 +488,17 @@ class Application(object):
                     self.linewidth)
         cv2.putText(img2, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, img2.shape[0] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+
         cv2image2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
         cv2image2_resize_1 = cv2.resize(cv2image2, (320, 240), 0, 0, cv2.INTER_CUBIC)
+        # 在当前帧上写绘制矩形
+        if(self.isSaveRoiForWhite2==True):
+            cv2.rectangle(cv2image2_resize_1,self.roiForWhite[1][0],self.roiForWhite[1][1],self.color,self.linewidth)
+        if(self.isSaveRoiForWhite2==False and self.checkInRegionN(2)):
+            cv2.rectangle(cv2image2_resize_1,self.mouseorg,self.mouseend, self.color,self.linewidth)
+            self.roiForWhite[1] = (self.mouseorg,self.mouseend)
+            self.WhiteImages[2] = cv2image2_resize_1[self.roiForWhite[1][0][1]+self.linewidth:self.roiForWhite[1][1][1]-self.linewidth,self.roiForWhite[1][0][0]+self.linewidth:self.roiForWhite[1][1][0]-self.linewidth]
+        # 在当前帧上写绘制矩形
         cv2image2_resize_2 = cv2.resize(cv2image2, (160, 120), 0, 0, cv2.INTER_CUBIC)
         self.Images[2] = cv2image2_resize_2
 
@@ -433,14 +522,23 @@ class Application(object):
                     self.linewidth)
         cv2.putText(img1, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, img1.shape[0] - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
-
+        # 显示当前帧到Label上
         cv2image1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
+        # 对帧图像进行大小变换
         cv2image1_resize_1 = cv2.resize(cv2image1, (320, 240), 0, 0, cv2.INTER_CUBIC)
+        # 在当前帧上写绘制矩形
+        if(self.isSaveRoiForWhite1==True):
+            cv2.rectangle(cv2image1_resize_1,self.roiForWhite[0][0],self.roiForWhite[0][1],self.color,self.linewidth)
+        if(self.isSaveRoiForWhite1==False and self.checkInRegionN(1)):
+            cv2.rectangle(cv2image1_resize_1,self.mouseorg,self.mouseend, self.color,self.linewidth)
+            self.roiForWhite[0] = (self.mouseorg,self.mouseend)
+            self.WhiteImages[1] = cv2image1_resize_1[self.roiForWhite[0][0][1]+self.linewidth:self.roiForWhite[0][1][1]-self.linewidth,self.roiForWhite[0][0][0]+self.linewidth:self.roiForWhite[0][1][0]-self.linewidth]
         cv2image1_resize_2 = cv2.resize(cv2image1, (160,120), 0,0, cv2.INTER_CUBIC)
+        # 保存160*120大小图像作为截图
         self.Images[1] = cv2image1_resize_2
+        # 显示320*240大小图像作为实时图像
         self.img1 = Image.fromarray(cv2image1_resize_1)
         imgtk1 = ImageTk.PhotoImage(image=self.img1)
-
         # 图像显示在Label上
         self.lbl_Msg_1.image = imgtk1
         self.lbl_Msg_1.configure(image=imgtk1)
@@ -468,7 +566,55 @@ class Application(object):
         #图像显示在Label上
         self.lbl_Msg_0.image = imgtk0
         self.lbl_Msg_0.configure(image=imgtk0)
-
+    #松开鼠标左键
+    def br_l(self,event):
+        print ('鼠标事件，松开鼠标左键')
+        self.mouseend = (event.x,event.y)
+        self.drawRectangle = False
+        self.mouseevent = event
+        if (self.checkInRegionN(1)==True and self.mouseend != self.mouseorg): self.isSaveRoiForWhite1 = True
+        if (self.checkInRegionN(2)==True and self.mouseend != self.mouseorg): self.isSaveRoiForWhite2 = True
+        if (self.checkInRegionN(3)==True and self.mouseend != self.mouseorg): self.isSaveRoiForWhite3 = True
+        if (self.checkInRegionN(4)==True and self.mouseend != self.mouseorg): self.isSaveRoiForWhite4 = True
+        self.mouseorg = (0,0)
+        self.mouseend = (0,0)
+    #按下鼠标左键并移动
+    def motion(self,event):
+        print ('鼠标事件，按下鼠标左键并移动')
+        if self.drawRectangle == True:
+            self.mouseend = (event.x, event.y)
+        self.mouseevent = event
+    #按下鼠标左键
+    def bp_l(self,event):
+        print ('鼠标事件，按下鼠标左键')
+        self.drawRectangle = True
+        self.mouseorg = (event.x,event.y)
+        self.mouseevent = event
+    #保存白瓶1的ROI区域
+    def save_ROIForWhite(self):
+        print ('保存白瓶1的ROI区域')
+        if self.isSaveRoiForWhite == False:
+            self.isSaveRoiForWhite = True
+            self.btn_SaveROIForWhite.configure(text="重绘区域")
+        else:
+            self.isSaveRoiForWhite = False
+            self.isSaveRoiForWhite1 = False
+            self.isSaveRoiForWhite2 = False
+            self.isSaveRoiForWhite3 = False
+            self.isSaveRoiForWhite4 = False
+            self.btn_SaveROIForWhite.configure(text="保存区域")
+    #判断鼠标位置在第几张图片
+    #n:第n张图片
+    #如果mouseorg在第n张图片，返回True，否则返回False
+    def checkInRegionN(self,n):
+        print('判断鼠标位置在第几张图片')
+        c = self.mouseevent.widget['text']
+        rtn = False
+        if (n==1 and c=="摄像头1"): rtn = True
+        if (n==2 and c=="摄像头2"): rtn = True
+        if (n==3 and c=="摄像头3"): rtn = True
+        if (n==4 and c=="摄像头4"): rtn = True
+        return rtn
 def main():
     root = tk.Tk()
     app = Application(root)
