@@ -10,6 +10,7 @@ import mvsdk
 import threading
 import time
 import datetime
+import ReadWhite
 
 #选择摄像头类
 class SelectCamera(tk.Toplevel):
@@ -166,6 +167,9 @@ class Application(object):
         self.isSaveRoiForWhite2 = False
         self.isSaveRoiForWhite3 = False
         self.isSaveRoiForWhite4 = False
+        #检测结果相关
+        self.ReadWhite = ReadWhite.ReadWhite(self)
+        self.checkResults = {}
     #点击右上角X关闭事件
     def closeWindow(self):
         print ('点击右上角X关闭事件')
@@ -195,8 +199,10 @@ class Application(object):
         self.btn_GetPictures.grid(row=3, column=2)
         self.btn_GetWhitePictures = tk.Button(self.lframe, text="抓拍白瓶", command=self.btn_GetWhitePictures)
         self.btn_GetWhitePictures.grid(rows=4, column=0)
+        self.btn_GetCheckResults = tk.Button(self.lframe, text="检测结果", command=self.btn_GetCheckResults)
+        self.btn_GetCheckResults.grid(row=4, column=1)
         self.btn_Exit = tk.Button(self.lframe, text="退出系统", textvariable="退出系统", command=self.btn_Exit)
-        self.btn_Exit.grid(row=4,column=1)
+        self.btn_Exit.grid(row=4,column=2)
         #抓取照片显示区
         self.lbl_Pic_0 = tk.Label(self.rframe, text="")
         self.lbl_Pic_0.grid(row=0,column=0)
@@ -219,6 +225,13 @@ class Application(object):
         self.lbl_Pic_8.grid(row=3, column=1)
         self.lbl_Pic_9 = tk.Label(self.rframe, text="")
         self.lbl_Pic_9.grid(row=4,column=1)
+    #得到检测结果
+    def btn_GetCheckResults(self):
+        print ('得到检测结果')
+        print (self.ReadWhite.checkWhite(self.WhiteImages[1]))
+        print(self.ReadWhite.checkWhite(self.WhiteImages[2]))
+        print(self.ReadWhite.checkWhite(self.WhiteImages[3]))
+        print(self.ReadWhite.checkWhite(self.WhiteImages[4]))
     #抓拍白瓶
     def btn_GetWhitePictures(self):
         print ('抓拍白瓶')
@@ -615,6 +628,7 @@ class Application(object):
         if (n==3 and c=="摄像头3"): rtn = True
         if (n==4 and c=="摄像头4"): rtn = True
         return rtn
+
 def main():
     root = tk.Tk()
     app = Application(root)
