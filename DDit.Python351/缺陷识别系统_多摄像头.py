@@ -11,6 +11,7 @@ import threading
 import time
 import datetime
 import ReadWhite
+import math
 
 #选择摄像头类
 class SelectCamera(tk.Toplevel):
@@ -142,10 +143,15 @@ class Application(object):
         self.createWidgets()
         self.bindEvents()
         #颜色相关
-        self.blue = (255,0,0)
+        self.blue = (0,0,255)
         self.green = (0,255,0)
-        self.red = (0,0,255)
+        self.red = (255,0,0)
         self.color = self.green
+        #字符颜色
+        self.charBlue = (255,0,0)
+        self.charGreen = (0,255,0)
+        self.charRed = (0,0,255)
+        self.charColor = self.charGreen
         #线条宽度
         self.linewidth = 2
         #打开摄像头按钮相关
@@ -169,7 +175,9 @@ class Application(object):
         self.isSaveRoiForWhite4 = False
         #检测结果相关
         self.ReadWhite = ReadWhite.ReadWhite(self)
-        self.checkResults = {}
+        self.checkResults = {0:True,1:True,2:True,3:True,4:True}
+        #实时监测
+        self.IsRealCheck = False
     #点击右上角X关闭事件
     def closeWindow(self):
         print ('点击右上角X关闭事件')
@@ -198,9 +206,11 @@ class Application(object):
         self.btn_GetPictures = tk.Button(self.lframe, text="抓拍照片", command=self.btn_GetPictures)
         self.btn_GetPictures.grid(row=3, column=2)
         self.btn_GetWhitePictures = tk.Button(self.lframe, text="抓拍白瓶", command=self.btn_GetWhitePictures)
-        self.btn_GetWhitePictures.grid(rows=4, column=0)
+        self.btn_GetWhitePictures.grid(row=3, column=3)
         self.btn_GetCheckResults = tk.Button(self.lframe, text="检测结果", command=self.btn_GetCheckResults)
-        self.btn_GetCheckResults.grid(row=4, column=1)
+        self.btn_GetCheckResults.grid(row=4, column=0)
+        self.btn_GetRealCheckResults = tk.Button(self.lframe, text="实时检测", command=self.btn_GetRealCheckResults)
+        self.btn_GetRealCheckResults.grid(row=4, column=1)
         self.btn_Exit = tk.Button(self.lframe, text="退出系统", textvariable="退出系统", command=self.btn_Exit)
         self.btn_Exit.grid(row=4,column=2)
         #抓取照片显示区
@@ -225,13 +235,55 @@ class Application(object):
         self.lbl_Pic_8.grid(row=3, column=1)
         self.lbl_Pic_9 = tk.Label(self.rframe, text="")
         self.lbl_Pic_9.grid(row=4,column=1)
+    #实时检测
+    def btn_GetRealCheckResults(self):
+        print ('实时检测')
+        if(self.IsRealCheck==False):
+            self.IsRealCheck = True
+            self.btn_GetRealCheckResults.configure(text="结束检测")
+        else:
+            self.IsRealCheck = False
+            self.btn_GetRealCheckResults.configure(text="实时检测")
     #得到检测结果
     def btn_GetCheckResults(self):
         print ('得到检测结果')
-        print (self.ReadWhite.checkWhite(self.WhiteImages[1]))
-        print(self.ReadWhite.checkWhite(self.WhiteImages[2]))
-        print(self.ReadWhite.checkWhite(self.WhiteImages[3]))
-        print(self.ReadWhite.checkWhite(self.WhiteImages[4]))
+        result1 = self.WhiteImages[1]
+        result2 = self.WhiteImages[2]
+        result3 = self.WhiteImages[3]
+        result4 = self.WhiteImages[4]
+        result1Pos = (int(round(result1.shape[0]/4)),int(round(result1.shape[1]/4)))
+        result2Pos = (int(round(result2.shape[0]/4)),int(round(result2.shape[1]/4)))
+        result3Pos = (int(round(result3.shape[0]/4)),int(round(result3.shape[1]/4)))
+        result4Pos = (int(round(result4.shape[0]/4)),int(round(result4.shape[1]/4)))
+        scale = 0.5
+        if self.ReadWhite.checkWhite(self.WhiteImages[1])==True:
+            cv2.putText(result1,"NG", result1Pos,cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+        else:
+            cv2.putText(result1,"OK", result1Pos,cv2.FONT_HERSHEY_SIMPLEX,scale, self.green, self.linewidth)
+        if self.ReadWhite.checkWhite(self.WhiteImages[2]) == True:
+            cv2.putText(result2, "NG", result2Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+        else:
+            cv2.putText(result2, "OK", result2Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.green, self.linewidth)
+        if self.ReadWhite.checkWhite(self.WhiteImages[3]) == True:
+            cv2.putText(result3, "NG", result3Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+        else:
+            cv2.putText(result3, "OK", result3Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.green, self.linewidth)
+        if self.ReadWhite.checkWhite(self.WhiteImages[4]) == True:
+            cv2.putText(result4, "NG", result4Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+        else:
+            cv2.putText(result4, "OK", result4Pos, cv2.FONT_HERSHEY_SIMPLEX, scale,self.green, self.linewidth)
+        imgtk6 = ImageTk.PhotoImage(image=Image.fromarray(result1))
+        imgtk7 = ImageTk.PhotoImage(image=Image.fromarray(result2))
+        imgtk8 = ImageTk.PhotoImage(image=Image.fromarray(result3))
+        imgtk9 = ImageTk.PhotoImage(image=Image.fromarray(result4))
+        self.lbl_Pic_6.image = imgtk6
+        self.lbl_Pic_6.configure(image=imgtk6)
+        self.lbl_Pic_7.image = imgtk7
+        self.lbl_Pic_7.configure(image=imgtk7)
+        self.lbl_Pic_8.image = imgtk8
+        self.lbl_Pic_8.configure(image=imgtk8)
+        self.lbl_Pic_9.image = imgtk9
+        self.lbl_Pic_9.configure(image=imgtk9)
     #抓拍白瓶
     def btn_GetWhitePictures(self):
         print ('抓拍白瓶')
@@ -437,9 +489,16 @@ class Application(object):
         frame4 = self.frames4.pop(0)
         self.lock.release()
         _,img4 = frame4
+        # 根据检测结果变换颜色
+        if self.checkResults[4] == True:
+            self.color = self.green
+            self.charColor = self.charGreen
+        else:
+            self.color = self.red
+            self.charColor = self.charRed
         # 在当前帧上写瓶子状态以及时间戳
-        cv2.putText(img4, "Camera:{}".format(self.cameraid4),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
-        cv2.putText(img4, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img4.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+        cv2.putText(img4, "Camera:{}".format(self.cameraid4),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.charColor, self.linewidth)
+        cv2.putText(img4, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img4.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.charColor, self.linewidth)
 
         cv2image4 = cv2.cvtColor(img4, cv2.COLOR_BGR2RGB)
         cv2image4_resize_1 = cv2.resize(cv2image4,(320,240),0,0,cv2.INTER_CUBIC)
@@ -450,6 +509,14 @@ class Application(object):
             cv2.rectangle(cv2image4_resize_1,self.mouseorg,self.mouseend, self.color,self.linewidth)
             self.roiForWhite[3] = (self.mouseorg,self.mouseend)
             self.WhiteImages[4] = cv2image4_resize_1[self.roiForWhite[3][0][1]+self.linewidth:self.roiForWhite[3][1][1]-self.linewidth,self.roiForWhite[3][0][0]+self.linewidth:self.roiForWhite[3][1][0]-self.linewidth]
+        # 实时判断是否白瓶，是白瓶显示红色，不是白瓶显示绿色
+        if(self.IsRealCheck == True):
+            if(self.ReadWhite.checkWhite(cv2image4_resize_1[self.roiForWhite[3][0][1]+self.linewidth:self.roiForWhite[3][1][1]-self.linewidth,self.roiForWhite[3][0][0]+self.linewidth:self.roiForWhite[3][1][0]-self.linewidth])) == True:
+                self.checkResults[4] = False
+            else:
+                self.checkResults[4] = True
+        else:
+            self.checkResults[4] = True
         cv2image4_resize_2 = cv2.resize(cv2image4,(160,120),0,0,cv2.INTER_CUBIC)
         self.Images[4] = cv2image4_resize_2
         self.img4 = Image.fromarray(cv2image4_resize_1)
@@ -466,9 +533,16 @@ class Application(object):
         frame3 = self.frames3.pop(0)
         self.lock.release()
         _,img3 = frame3
+        # 根据检测结果变换颜色
+        if self.checkResults[3] == True:
+            self.color = self.green
+            self.charColor = self.charGreen
+        else:
+            self.color = self.red
+            self.charColor = self.charRed
         # 在当前帧上写瓶子状态以及时间戳
-        cv2.putText(img3, "Camera:{}".format(self.cameraid3),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
-        cv2.putText(img3, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img3.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+        cv2.putText(img3, "Camera:{}".format(self.cameraid3),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.charColor, self.linewidth)
+        cv2.putText(img3, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img3.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.charColor, self.linewidth)
 
         cv2image3 = cv2.cvtColor(img3, cv2.COLOR_BGR2RGB)
         cv2image3_resize_1 = cv2.resize(cv2image3,(320,240),0,0,cv2.INTER_CUBIC)
@@ -479,7 +553,14 @@ class Application(object):
             cv2.rectangle(cv2image3_resize_1,self.mouseorg,self.mouseend, self.color,self.linewidth)
             self.roiForWhite[2] = (self.mouseorg,self.mouseend)
             self.WhiteImages[3] = cv2image3_resize_1[self.roiForWhite[2][0][1]+self.linewidth:self.roiForWhite[2][1][1]-self.linewidth,self.roiForWhite[2][0][0]+self.linewidth:self.roiForWhite[2][1][0]-self.linewidth]
-
+        # 实时判断是否白瓶，是白瓶显示红色，不是白瓶显示绿色
+        if(self.IsRealCheck == True):
+            if(self.ReadWhite.checkWhite(cv2image3_resize_1[self.roiForWhite[2][0][1]+self.linewidth:self.roiForWhite[2][1][1]-self.linewidth,self.roiForWhite[2][0][0]+self.linewidth:self.roiForWhite[2][1][0]-self.linewidth])) == True:
+                self.checkResults[3] = False
+            else:
+                self.checkResults[3] = True
+        else:
+            self.checkResults[3] = True
         cv2image3_resize_2 = cv2.resize(cv2image3,(160,120),0,0,cv2.INTER_CUBIC)
         self.Images[3] = cv2image3_resize_2
         self.img3 = Image.fromarray(cv2image3_resize_1)
@@ -496,11 +577,18 @@ class Application(object):
         frame2 = self.frames2.pop(0)
         self.lock.release()
         _, img2 = frame2
+        # 根据检测结果变换颜色
+        if self.checkResults[2] == True:
+            self.color = self.green
+            self.charColor = self.charGreen
+        else:
+            self.color = self.red
+            self.charColor = self.charRed
         # 在当前帧上写瓶子状态以及时间戳
-        cv2.putText(img2, "Camera:{}".format(self.cameraid2), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color,
+        cv2.putText(img2, "Camera:{}".format(self.cameraid2), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.charColor,
                     self.linewidth)
         cv2.putText(img2, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, img2.shape[0] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.charColor, self.linewidth)
 
         cv2image2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
         cv2image2_resize_1 = cv2.resize(cv2image2, (320, 240), 0, 0, cv2.INTER_CUBIC)
@@ -511,6 +599,14 @@ class Application(object):
             cv2.rectangle(cv2image2_resize_1,self.mouseorg,self.mouseend, self.color,self.linewidth)
             self.roiForWhite[1] = (self.mouseorg,self.mouseend)
             self.WhiteImages[2] = cv2image2_resize_1[self.roiForWhite[1][0][1]+self.linewidth:self.roiForWhite[1][1][1]-self.linewidth,self.roiForWhite[1][0][0]+self.linewidth:self.roiForWhite[1][1][0]-self.linewidth]
+        # 实时判断是否白瓶，是白瓶显示红色，不是白瓶显示绿色
+        if(self.IsRealCheck == True):
+            if(self.ReadWhite.checkWhite(cv2image2_resize_1[self.roiForWhite[1][0][1]+self.linewidth:self.roiForWhite[1][1][1]-self.linewidth,self.roiForWhite[1][0][0]+self.linewidth:self.roiForWhite[1][1][0]-self.linewidth])) == True:
+                self.checkResults[2] = False
+            else:
+                self.checkResults[2] = True
+        else:
+            self.checkResults[2] = True
         # 在当前帧上写绘制矩形
         cv2image2_resize_2 = cv2.resize(cv2image2, (160, 120), 0, 0, cv2.INTER_CUBIC)
         self.Images[2] = cv2image2_resize_2
@@ -530,11 +626,18 @@ class Application(object):
         frame1 = self.frames1.pop(0)
         self.lock.release()
         _, img1 = frame1
+        # 根据检测结果变换颜色
+        if self.checkResults[1] == True:
+            self.color = self.green
+            self.charColor = self.charGreen
+        else:
+            self.color = self.red
+            self.charColor = self.charRed
         # 在当前帧上写瓶子状态以及时间戳
-        cv2.putText(img1, "Camera:{}".format(self.cameraid1), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color,
+        cv2.putText(img1, "Camera:{}".format(self.cameraid1), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.charColor,
                     self.linewidth)
         cv2.putText(img1, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, img1.shape[0] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.charColor, self.linewidth)
         # 显示当前帧到Label上
         cv2image1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
         # 对帧图像进行大小变换
@@ -546,6 +649,14 @@ class Application(object):
             cv2.rectangle(cv2image1_resize_1,self.mouseorg,self.mouseend, self.color,self.linewidth)
             self.roiForWhite[0] = (self.mouseorg,self.mouseend)
             self.WhiteImages[1] = cv2image1_resize_1[self.roiForWhite[0][0][1]+self.linewidth:self.roiForWhite[0][1][1]-self.linewidth,self.roiForWhite[0][0][0]+self.linewidth:self.roiForWhite[0][1][0]-self.linewidth]
+        # 实时判断是否白瓶，是白瓶显示红色，不是白瓶显示绿色
+        if(self.IsRealCheck == True):
+            if(self.ReadWhite.checkWhite(cv2image1_resize_1[self.roiForWhite[0][0][1]+self.linewidth:self.roiForWhite[0][1][1]-self.linewidth,self.roiForWhite[0][0][0]+self.linewidth:self.roiForWhite[0][1][0]-self.linewidth])) == True:
+                self.checkResults[1] = False
+            else:
+                self.checkResults[1] = True
+        else:
+            self.checkResults[1] = True
         cv2image1_resize_2 = cv2.resize(cv2image1, (160,120), 0,0, cv2.INTER_CUBIC)
         # 保存160*120大小图像作为截图
         self.Images[1] = cv2image1_resize_2
