@@ -18,11 +18,11 @@ class SelectCamera(tk.Toplevel):
     def __init__(self, parent, application, *args, **kw):
         tk.Toplevel.__init__(self, master=parent, *args, **kw)
         self.title("选择摄像头")
-        self.cameraid = 1#默认使用MindVision摄像头
+        self.cameraid = 0#默认使用MindVision摄像头
         self.parent = parent
         self.application = application
         self.rdb_v = tk.IntVar()
-        self.cameralists = [(0,"笔记本电脑自带摄像头","D"),(1,"迈德威尔工业摄像头","M")]
+        self.cameralists = [(1,"笔记本电脑自带摄像头","D"),(0,"迈德威尔工业摄像头","M")]
         self.clas_v = tk.StringVar()
         self.clas_v.set("M")
         for col, text, cameracode in self.cameralists:
@@ -178,6 +178,8 @@ class Application(object):
         self.checkResults = {0:True,1:True,2:True,3:True,4:True}
         #实时监测
         self.IsRealCheck = False
+        #背景图
+        self.BackImages = {}
     #点击右上角X关闭事件
     def closeWindow(self):
         print ('点击右上角X关闭事件')
@@ -201,18 +203,20 @@ class Application(object):
         self.lbl_Msg_4.grid(row=2,column=0,columnspan=2)
         self.btn_OpenCamera = tk.Button(self.lframe, text="打开摄像头", command=self.btn_OpenCamera)
         self.btn_OpenCamera.grid(row=3,column=0)
+        self.btn_SetBg = tk.Button(self.lframe, text="保存背景图", command=self.btn_SetBg)
+        self.btn_SetBg.grid(row=3,column=1)
         self.btn_SaveROIForWhite = tk.Button(self.lframe, text="保存区域", command=self.save_ROIForWhite)
-        self.btn_SaveROIForWhite.grid(row=3,column=1)
+        self.btn_SaveROIForWhite.grid(row=3,column=2)
         self.btn_GetPictures = tk.Button(self.lframe, text="抓拍照片", command=self.btn_GetPictures)
-        self.btn_GetPictures.grid(row=3, column=2)
+        self.btn_GetPictures.grid(row=3, column=3)
         self.btn_GetWhitePictures = tk.Button(self.lframe, text="抓拍白瓶", command=self.btn_GetWhitePictures)
-        self.btn_GetWhitePictures.grid(row=3, column=3)
+        self.btn_GetWhitePictures.grid(row=4, column=0)
         self.btn_GetCheckResults = tk.Button(self.lframe, text="检测结果", command=self.btn_GetCheckResults)
-        self.btn_GetCheckResults.grid(row=4, column=0)
+        self.btn_GetCheckResults.grid(row=4, column=1)
         self.btn_GetRealCheckResults = tk.Button(self.lframe, text="实时检测", command=self.btn_GetRealCheckResults)
-        self.btn_GetRealCheckResults.grid(row=4, column=1)
+        self.btn_GetRealCheckResults.grid(row=4, column=2)
         self.btn_Exit = tk.Button(self.lframe, text="退出系统", textvariable="退出系统", command=self.btn_Exit)
-        self.btn_Exit.grid(row=4,column=2)
+        self.btn_Exit.grid(row=4,column=3)
         #抓取照片显示区
         self.lbl_Pic_0 = tk.Label(self.rframe, text="")
         self.lbl_Pic_0.grid(row=0,column=0)
@@ -235,6 +239,37 @@ class Application(object):
         self.lbl_Pic_8.grid(row=3, column=1)
         self.lbl_Pic_9 = tk.Label(self.rframe, text="")
         self.lbl_Pic_9.grid(row=4,column=1)
+        #背景图显示区
+        self.lbl_Pic_10 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_10.grid(row=0, column=1)
+        self.lbl_Pic_11 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_11.grid(row=1, column=1)
+        self.lbl_Pic_12 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_12.grid(row=2, column=1)
+        self.lbl_Pic_13 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_13.grid(row=3, column=1)
+        self.lbl_Pic_14 = tk.Label(self.rframe, text="")
+        self.lbl_Pic_14.grid(row=4,column=1)
+    #保存背景
+    def btn_SetBg(self):
+        print ('保存背景')
+        if self.camReader0!=None and self.selectCamera.cameraid == 0:
+            imgtk10 = ImageTk.PhotoImage(image=Image.fromarray(self.BackImages[0]))
+            self.lbl_Pic_10.image = imgtk10
+            self.lbl_Pic_10.configure(image=imgtk10)
+        else:
+            imgtk11 = ImageTk.PhotoImage(image=Image.fromarray(self.BackImages[1]))
+            imgtk12 = ImageTk.PhotoImage(image=Image.fromarray(self.BackImages[2]))
+            imgtk13 = ImageTk.PhotoImage(image=Image.fromarray(self.BackImages[3]))
+            imgtk14 = ImageTk.PhotoImage(image=Image.fromarray(self.BackImages[4]))
+            self.lbl_Pic_11.image = imgtk11
+            self.lbl_Pic_11.configure(image=imgtk11)
+            self.lbl_Pic_12.image = imgtk12
+            self.lbl_Pic_12.configure(image=imgtk12)
+            self.lbl_Pic_13.image = imgtk13
+            self.lbl_Pic_13.configure(image=imgtk13)
+            self.lbl_Pic_14.image = imgtk14
+            self.lbl_Pic_14.configure(image=imgtk14)
     #实时检测
     def btn_GetRealCheckResults(self):
         print ('实时检测')
@@ -247,43 +282,54 @@ class Application(object):
     #得到检测结果
     def btn_GetCheckResults(self):
         print ('得到检测结果')
-        result1 = self.WhiteImages[1]
-        result2 = self.WhiteImages[2]
-        result3 = self.WhiteImages[3]
-        result4 = self.WhiteImages[4]
-        result1Pos = (int(round(result1.shape[0]/4)),int(round(result1.shape[1]/4)))
-        result2Pos = (int(round(result2.shape[0]/4)),int(round(result2.shape[1]/4)))
-        result3Pos = (int(round(result3.shape[0]/4)),int(round(result3.shape[1]/4)))
-        result4Pos = (int(round(result4.shape[0]/4)),int(round(result4.shape[1]/4)))
         scale = 0.5
-        if self.ReadWhite.checkWhite(self.WhiteImages[1])==True:
-            cv2.putText(result1,"NG", result1Pos,cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+        if self.camReader0!= None and self.selectCamera.cameraid == 0:
+            result0 = self.WhiteImages[0]
+            result0Pos = (int(round(result0.shape[0]/4)),int(round(result0.shape[1]/4)))
+            if self.ReadWhite.checkWhite(self.WhiteImages[0])==True:
+                cv2.putText(result0, "NG", result0Pos, cv2.FONT_HERSHEY_SIMPLEX,scale, self.red, self.linewidth)
+            else:
+                cv2.putText(result0, "OK", result0Pos, cv2.FONT_HERSHEY_SIMPLEX, scale. self.green, self.linewidth)
+            imgtk5 = ImageTk.PhotoImage(image=Image.fromarray(result0))
+            self.lbl_Pic_5.image = imgtk5
+            self.lbl_Pic_5.configure(image=imgtk5)
         else:
-            cv2.putText(result1,"OK", result1Pos,cv2.FONT_HERSHEY_SIMPLEX,scale, self.green, self.linewidth)
-        if self.ReadWhite.checkWhite(self.WhiteImages[2]) == True:
-            cv2.putText(result2, "NG", result2Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
-        else:
-            cv2.putText(result2, "OK", result2Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.green, self.linewidth)
-        if self.ReadWhite.checkWhite(self.WhiteImages[3]) == True:
-            cv2.putText(result3, "NG", result3Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
-        else:
-            cv2.putText(result3, "OK", result3Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.green, self.linewidth)
-        if self.ReadWhite.checkWhite(self.WhiteImages[4]) == True:
-            cv2.putText(result4, "NG", result4Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
-        else:
-            cv2.putText(result4, "OK", result4Pos, cv2.FONT_HERSHEY_SIMPLEX, scale,self.green, self.linewidth)
-        imgtk6 = ImageTk.PhotoImage(image=Image.fromarray(result1))
-        imgtk7 = ImageTk.PhotoImage(image=Image.fromarray(result2))
-        imgtk8 = ImageTk.PhotoImage(image=Image.fromarray(result3))
-        imgtk9 = ImageTk.PhotoImage(image=Image.fromarray(result4))
-        self.lbl_Pic_6.image = imgtk6
-        self.lbl_Pic_6.configure(image=imgtk6)
-        self.lbl_Pic_7.image = imgtk7
-        self.lbl_Pic_7.configure(image=imgtk7)
-        self.lbl_Pic_8.image = imgtk8
-        self.lbl_Pic_8.configure(image=imgtk8)
-        self.lbl_Pic_9.image = imgtk9
-        self.lbl_Pic_9.configure(image=imgtk9)
+            result1 = self.WhiteImages[1]
+            result2 = self.WhiteImages[2]
+            result3 = self.WhiteImages[3]
+            result4 = self.WhiteImages[4]
+            result1Pos = (int(round(result1.shape[0]/4)),int(round(result1.shape[1]/4)))
+            result2Pos = (int(round(result2.shape[0]/4)),int(round(result2.shape[1]/4)))
+            result3Pos = (int(round(result3.shape[0]/4)),int(round(result3.shape[1]/4)))
+            result4Pos = (int(round(result4.shape[0]/4)),int(round(result4.shape[1]/4)))
+            if self.ReadWhite.checkWhite(self.WhiteImages[1])==True:
+                cv2.putText(result1,"NG", result1Pos,cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+            else:
+                cv2.putText(result1,"OK", result1Pos,cv2.FONT_HERSHEY_SIMPLEX,scale, self.green, self.linewidth)
+            if self.ReadWhite.checkWhite(self.WhiteImages[2]) == True:
+                cv2.putText(result2, "NG", result2Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+            else:
+                cv2.putText(result2, "OK", result2Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.green, self.linewidth)
+            if self.ReadWhite.checkWhite(self.WhiteImages[3]) == True:
+                cv2.putText(result3, "NG", result3Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+            else:
+                cv2.putText(result3, "OK", result3Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.green, self.linewidth)
+            if self.ReadWhite.checkWhite(self.WhiteImages[4]) == True:
+                cv2.putText(result4, "NG", result4Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
+            else:
+                cv2.putText(result4, "OK", result4Pos, cv2.FONT_HERSHEY_SIMPLEX, scale,self.green, self.linewidth)
+            imgtk6 = ImageTk.PhotoImage(image=Image.fromarray(result1))
+            imgtk7 = ImageTk.PhotoImage(image=Image.fromarray(result2))
+            imgtk8 = ImageTk.PhotoImage(image=Image.fromarray(result3))
+            imgtk9 = ImageTk.PhotoImage(image=Image.fromarray(result4))
+            self.lbl_Pic_6.image = imgtk6
+            self.lbl_Pic_6.configure(image=imgtk6)
+            self.lbl_Pic_7.image = imgtk7
+            self.lbl_Pic_7.configure(image=imgtk7)
+            self.lbl_Pic_8.image = imgtk8
+            self.lbl_Pic_8.configure(image=imgtk8)
+            self.lbl_Pic_9.image = imgtk9
+            self.lbl_Pic_9.configure(image=imgtk9)
     #抓拍白瓶
     def btn_GetWhitePictures(self):
         print ('抓拍白瓶')
@@ -383,6 +429,12 @@ class Application(object):
             self.lbl_Pic_7.grid_forget()
             self.lbl_Pic_8.grid_forget()
             self.lbl_Pic_9.grid_forget()
+            self.lbl_Pic_10.grid(row=0,column=2)
+            self.lbl_Pic_11.grid_forget()
+            self.lbl_Pic_12.grid_forget()
+            self.lbl_Pic_13.grid_forget()
+            self.lbl_Pic_14.grid_forget()
+
         #如果选择MindVision摄像头，只显示Label1,2,3,4, Label0放到第一个位置
         if self.selectCamera.cameraid == 1:
             self.lbl_Msg_1.grid(row=0,column=0, columnspan=2)
@@ -400,6 +452,11 @@ class Application(object):
             self.lbl_Pic_8.grid(row=2,column=1)
             self.lbl_Pic_9.grid(row=3,column=1)
             self.lbl_Pic_5.grid_forget()
+            self.lbl_Pic_11.grid(row=0,column=1)
+            self.lbl_Pic_12.grid(row=1,column=1)
+            self.lbl_Pic_13.grid(row=2,column=1)
+            self.lbl_Pic_14.grid(row=3,column=1)
+            self.lbl_Pic_10.grid_forget()
 
         self.root.update()
     #打开摄像头
@@ -519,6 +576,7 @@ class Application(object):
             self.checkResults[4] = True
         cv2image4_resize_2 = cv2.resize(cv2image4,(160,120),0,0,cv2.INTER_CUBIC)
         self.Images[4] = cv2image4_resize_2
+        self.BackImages[4] = cv2image4_resize_2
         self.img4 = Image.fromarray(cv2image4_resize_1)
         imgtk4 = ImageTk.PhotoImage(image=self.img4)
         #图像显示在Label上
@@ -563,6 +621,7 @@ class Application(object):
             self.checkResults[3] = True
         cv2image3_resize_2 = cv2.resize(cv2image3,(160,120),0,0,cv2.INTER_CUBIC)
         self.Images[3] = cv2image3_resize_2
+        self.BackImages[3] = cv2image3_resize_2
         self.img3 = Image.fromarray(cv2image3_resize_1)
         imgtk3 = ImageTk.PhotoImage(image=self.img3)
         #图像显示在Label上
@@ -610,7 +669,7 @@ class Application(object):
         # 在当前帧上写绘制矩形
         cv2image2_resize_2 = cv2.resize(cv2image2, (160, 120), 0, 0, cv2.INTER_CUBIC)
         self.Images[2] = cv2image2_resize_2
-
+        self.BackImages[2] = cv2image2_resize_2
         self.img2 = Image.fromarray(cv2image2_resize_1)
         imgtk2 = ImageTk.PhotoImage(image=self.img2)
 
@@ -660,6 +719,7 @@ class Application(object):
         cv2image1_resize_2 = cv2.resize(cv2image1, (160,120), 0,0, cv2.INTER_CUBIC)
         # 保存160*120大小图像作为截图
         self.Images[1] = cv2image1_resize_2
+        self.BackImages[1] = cv2image1_resize_2
         # 显示320*240大小图像作为实时图像
         self.img1 = Image.fromarray(cv2image1_resize_1)
         imgtk1 = ImageTk.PhotoImage(image=self.img1)
@@ -675,18 +735,49 @@ class Application(object):
         frame0 = self.frames0.pop(0)
         self.lock.release()
         _,img0 = frame0
+        # 根据检测结果变换颜色
+        if self.checkResults[0] == True:
+            self.color = self.green
+            self.charColor = self.charGreen
+        else:
+            self.color = self.red
+            self.charColor = self.charRed
         # 在当前帧上写瓶子状态以及时间戳
-        cv2.putText(img0, "Camera:{}".format(self.cameraid0),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
-        cv2.putText(img0, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img0.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+        #cv2.putText(img0, "Camera:{}".format(self.cameraid0),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.charColor, self.linewidth)
+        #cv2.putText(img0, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img0.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.charColor, self.linewidth)
 
         cv2image0 = cv2.cvtColor(img0, cv2.COLOR_BGR2RGB)
         cv2image0_resize_1 = cv2.resize(cv2image0,(320,240),0,0,cv2.INTER_CUBIC)
+        # 在当前帧上绘制矩形
+        if(self.isSaveRoiForWhite == True):
+            cv2.rectangle(cv2image0_resize_1,self.roiForWhite[0][0],self.roiForWhite[0][1],self.color,self.linewidth)
+            cv2.line(cv2image0_resize_1,
+                     ((int)(self.roiForWhite[0][0][0]),(int)(self.roiForWhite[0][0][1]+(self.roiForWhite[0][1][1]-self.roiForWhite[0][0][1])/2)),
+                     ((int)(self.roiForWhite[0][1][0]),(int)(self.roiForWhite[0][0][1]+(self.roiForWhite[0][1][1]-self.roiForWhite[0][0][1])/2)),
+                     self.color,self.linewidth)
+        if(self.isSaveRoiForWhite == False and self.checkInRegionN(0)):
+            cv2.rectangle(cv2image0_resize_1, self.mouseorg, self.mouseend, self.color, self.linewidth)
+            self.roiForWhite[0] = (self.mouseorg,self.mouseend)
+            self.WhiteImages[0] = cv2image0_resize_1[self.roiForWhite[0][0][1]+self.linewidth:self.roiForWhite[0][1][1]-self.linewidth,self.roiForWhite[0][0][0]+self.linewidth:self.roiForWhite[0][1][0]-self.linewidth]
+            # cv2.line(cv2image0_resize_1,
+            #      ((int)(self.mouseorg[0]), (int)(self.mouseorg[1] + (self.mouseend[1] - self.mouseorg[1]) / 2)),
+            #      ((int)(self.mouseend[0]), (int)(self.mouseorg[1] + (self.mouseend[1] - self.mouseorg[1]) / 2)),
+            #      self.color, self.linewidth)
+        # 实时判断是否为白瓶，是白瓶显示红色，不是白瓶显示绿色
+        if(self.IsRealCheck == True):
+            if(self.ReadWhite.checkWhite(cv2image0_resize_1[self.roiForWhite[0][0][1]+self.linewidth:self.roiForWhite[0][1][1]-self.linewidth,self.roiForWhite[0][0][0]+self.linewidth:self.roiForWhite[0][1][0]-self.linewidth])) == True:
+                self.checkResults[0] = False
+            else:
+                self.checkResults[0] = True
+        else:
+            self.checkResults[0] = True
         cv2image0_resize_2 = cv2.resize(cv2image0,(160,120),0,0,cv2.INTER_CUBIC)
+        #保存160*120大小图像作为截图
         self.Images[0] = cv2image0_resize_2
-
+        self.BackImages[0] = cv2image0_resize_2
+        #显示320*240大小图像作为实时图像
         self.img0 = Image.fromarray(cv2image0_resize_1)
         imgtk0 = ImageTk.PhotoImage(image=self.img0)
-
         #图像显示在Label上
         self.lbl_Msg_0.image = imgtk0
         self.lbl_Msg_0.configure(image=imgtk0)
@@ -696,6 +787,7 @@ class Application(object):
         self.mouseend = (event.x,event.y)
         self.drawRectangle = False
         self.mouseevent = event
+        if (self.checkInRegionN(0)==True and self.mouseend != self.mouseorg): self.isSaveRoiForWhite = True
         if (self.checkInRegionN(1)==True and self.mouseend != self.mouseorg): self.isSaveRoiForWhite1 = True
         if (self.checkInRegionN(2)==True and self.mouseend != self.mouseorg): self.isSaveRoiForWhite2 = True
         if (self.checkInRegionN(3)==True and self.mouseend != self.mouseorg): self.isSaveRoiForWhite3 = True
@@ -734,6 +826,7 @@ class Application(object):
         print('判断鼠标位置在第几张图片')
         c = self.mouseevent.widget['text']
         rtn = False
+        if (n==0 and c=="本机摄像头"): rtn = True
         if (n==1 and c=="摄像头1"): rtn = True
         if (n==2 and c=="摄像头2"): rtn = True
         if (n==3 and c=="摄像头3"): rtn = True
