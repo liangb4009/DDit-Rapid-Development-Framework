@@ -287,9 +287,9 @@ class Application(object):
             result0 = self.WhiteImages[0]
             result0Pos = (int(round(result0.shape[0]/4)),int(round(result0.shape[1]/4)))
             if self.ReadWhite.checkWhite(self.WhiteImages[0])==True:
-                cv2.putText(result0, "NG", result0Pos, cv2.FONT_HERSHEY_SIMPLEX,scale, self.red, self.linewidth)
+                cv2.putText(result0, "NG", result0Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.red, self.linewidth)
             else:
-                cv2.putText(result0, "OK", result0Pos, cv2.FONT_HERSHEY_SIMPLEX, scale. self.green, self.linewidth)
+                cv2.putText(result0, "OK", result0Pos, cv2.FONT_HERSHEY_SIMPLEX, scale, self.green, self.linewidth)
             imgtk5 = ImageTk.PhotoImage(image=Image.fromarray(result0))
             self.lbl_Pic_5.image = imgtk5
             self.lbl_Pic_5.configure(image=imgtk5)
