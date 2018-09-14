@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
-#@create by marick, 2018-08-02, 缺陷识别系统,支持多摄像头
-#缺陷识别系统
+#@create by marick, 2018-09-13, 缺陷识别系统,模板
+#模板
 import tkinter as tk
 import tkinter.messagebox as mgbx
 from PIL import Image, ImageTk

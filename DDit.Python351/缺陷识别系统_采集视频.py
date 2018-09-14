@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
-#@create by marick, 2018-08-02, 缺陷识别系统,支持多摄像头
-#缺陷识别系统
+#@create by marick, 2018-08-02, 缺陷识别系统,采集视频
+#采集视频
 import tkinter as tk
 import tkinter.messagebox as mgbx
 from PIL import Image, ImageTk
@@ -10,8 +10,15 @@ import mvsdk
 import threading
 import time
 import datetime
-import ReadBottle
-import ReadWhite
+
+#采集视频类
+class VideoWriter(object):
+    def __init__(self,parent):
+        self.saveVideoPath = parent.saveVideoPath
+    def createVideoWriter(self):
+        fileName = self.saveVideoPath + datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".avi"
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        return cv2.VideoWriter(fileName, fourcc, 1, (640,480))
 
 #选择摄像头类
 class SelectCamera(tk.Toplevel):
@@ -54,8 +61,8 @@ class CamReader(object):
         self.isrun = False
         self.thread = threading.Thread(target=self.run)
         self.handler = handler
-        self.CV_SYSTEM_CACHE_CNT = 0
-        self.LOOP_INTERVAL_TIME = 1
+        self.CV_SYSTEM_CACHE_CNT = 5
+        self.LOOP_INTERVAL_TIME = 0.2
         print ('初始化摄像头')
         #默认打开笔记本电脑摄像头
         self.cameraid = self.handler.cameraid
@@ -64,7 +71,7 @@ class CamReader(object):
         self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         # 设置相机触发模式（0：连续   1：软触发   2：外触发）
-        self.camera.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 2)
+        self.camera.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 0)
         # 设置相机曝光模式（80：手动   81：自动）
         self.camera.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, 80)
         # 设置相机曝光时间（单位微秒）
@@ -96,18 +103,19 @@ class CamReader(object):
         self.camera.release()
         self.isrun = False
 
+
 #应用程序类
 class Application(object):
     #初始化程序变量
     def __init__(self, root):
         print ('初始化程序变量')
         self.root = root
-        self.root.title('缺陷识别系统-触发拍照')
+        self.root.title('缺陷识别系统-多摄像头')
         #选择摄像头相关
         self.cameraid = None#默认读取摄像头为None
         self.selectCamera = SelectCamera(self.root,self)
         self.selectCamera.iconify()
-        self.LOOP_INTERVAL_TIME = 0.1
+        self.LOOP_INTERVAL_TIME = 1
         #摄像头读取相关
         self.camera = None
         self.camReader = None
@@ -135,31 +143,14 @@ class Application(object):
         self.color = self.green
         #线条宽度
         self.linewidth = 2
-        #保存背景
-        self.imgSave = None
-        #触发检测
-        self.triggerCheck = False
-        self.ReadBottle = ReadBottle.ReadBottle(self)
-        self.roiCenter = (0,0)
-        self.checkHalfWidth = 150
-        self.checkHalfHeight = 100
-        self.roiForWhiteLeftTop = (0,0)
-        self.roiForWhiteRightBottom = (0,0)
-        self.ReadWhite = ReadWhite.ReadWhite(self)
-        self.checkResult = False
-        #颜色相关
-        self.blue = (0,0,255)
-        self.green = (0,255,0)
-        self.red = (255,0,0)
-        self.color = self.green
-        #字符颜色
-        self.charBlue = (255,0,0)
-        self.charGreen = (0,255,0)
-        self.charRed = (0,0,255)
-        self.charColor = self.charGreen
-        #采样图片
+        #采集图片
         self.saveSample = False
-        self.saveSampleForTriggerCapPath = os.path.join(self.srcFolderPath,"SaveSampleForTriggerCap\\")
+        self.saveSampleForVideoCap = os.path.join(self.srcFolderPath,"SaveSampleForVideoCap\\")
+        #采样视频
+        self.saveVideo = False
+        self.saveVideoPath = os.path.join(self.srcFolderPath,"SaveSampleForVideoCap\\")
+        self.VideoWriter = None
+
     #点击右上角X关闭事件
     def closeWindow(self):
         print ('点击右上角X关闭事件')
@@ -175,14 +166,12 @@ class Application(object):
         self.lbl_Msg.grid(row=0,column=0,columnspan=4)
         self.btn_OpenCamera = tk.Button(self.lframe, text="打开摄像头",command=self.btn_OpenCamera)
         self.btn_OpenCamera.grid(row=1,column=0)
-        self.btn_SaveBackground = tk.Button(self.lframe, text="保存背景",command=self.btn_SaveBackground)
-        self.btn_SaveBackground.grid(row=1,column=1)
-        self.btn_TriggerCheck = tk.Button(self.lframe, text="触发检测", command=self.btn_TriggerCheck)
-        self.btn_TriggerCheck.grid(row=1,column=2)
+        self.btn_SaveVideo = tk.Button(self.lframe, text="保存视频", command=self.btn_SaveVideo)
+        self.btn_SaveVideo.grid(row=1,column=1)
         self.btn_SaveSample = tk.Button(self.lframe, text="采样图片", command=self.btn_SaveSample)
-        self.btn_SaveSample.grid(row=1,column=3)
+        self.btn_SaveSample.grid(row=1,column=2)
         self.btn_Exit = tk.Button(self.lframe, text="退出系统", command=self.btn_Exit)
-        self.btn_Exit.grid(row=1,column=4)
+        self.btn_Exit.grid(row=1,column=3)
 
     #绑定事件
     def bindEvents(self):
@@ -211,30 +200,24 @@ class Application(object):
 
     #采样图片
     def btn_SaveSample(self):
-        print ('采样图片')
+        print('采样图片')
         if(self.saveSample==False):
             self.saveSample = True
             self.btn_SaveSample.configure(text='取消采样')
         else:
             self.saveSample = False
             self.btn_SaveSample.configure(text='采样图片')
-
-    #触发检测
-    def btn_TriggerCheck(self):
-        print ('触发检测')
-        if(self.triggerCheck==False):
-            self.triggerCheck = True
-            self.btn_TriggerCheck.configure(text='关闭检测')
+    #保存视频
+    def btn_SaveVideo(self):
+        print ('保存视频')
+        if(self.saveVideo==False):
+            self.saveVideo = True
+            self.VideoWriter = VideoWriter.createVideoWriter(self)
+            self.btn_SaveVideo.configure(text='取消保存')
         else:
-            self.triggerCheck = False
-            self.btn_TriggerCheck.configure(text='触发检测')
-
-    #保存背景
-    def btn_SaveBackground(self):
-        print ('保存背景')
-        self.imgSave.save(os.path.join(self.srcFolderPath,self.backGround))
-        mgbx.showinfo("设置背景图像","设置背景图像成功")
-
+            self.saveVideo = False
+            self.VideoWriter = None
+            self.btn_SaveVideo.configure(text='保存视频')
     #点击打开摄像头按钮
     def btn_OpenCamera(self):
         print ('点击打开摄像头按钮')
@@ -278,47 +261,25 @@ class Application(object):
         frame = self.frames.pop(0)
         self.lock.release()
         _,img = frame
-        #默认检测结果正确的
-        self.checkResult = True
         #先保存原始图像用来生成背景图
         imgSave = img.copy()
-      #沿着roi区域中心点绘制一条直线
-        if(self.triggerCheck==True):
-            print ('沿着roi区域中心点绘制一条直线')
-            print (self.ReadBottle.recognizeRoiCenter(img))
-            self.roiCenter = self.ReadBottle.recognizeRoiCenter(img)
-            if self.roiCenter != (0,0,0,0):
-                #cv2.rectangle(img,(self.roiCenter[0]-self.checkHalfWidth,self.roiCenter[1]-self.checkHalfHeight),(self.roiCenter[0]+self.checkHalfWidth,self.roiCenter[1]+self.checkHalfHeight),self.color,self.linewidth)
-                self.roiForWhiteLeftTop = (self.roiCenter[0]-self.checkHalfWidth,self.roiCenter[1]-self.checkHalfHeight)
-                self.roiForWhiteRightBottom = (self.roiCenter[0]+self.checkHalfWidth,self.roiCenter[1]+self.checkHalfHeight)
-                if(self.ReadWhite.checkWhite(img[self.roiForWhiteLeftTop[1]+self.linewidth:self.roiForWhiteRightBottom[1]-self.linewidth,self.roiForWhiteLeftTop[0]+self.linewidth:self.roiForWhiteRightBottom[0]-self.linewidth])) == True:
-                    self.checkResult = False
-                else:
-                    self.checkResult = True
-            # 图片采样
-            if (self.saveSample == True):
-                filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".JPG"
-                self.imgSave.save(os.path.join(self.saveSampleForTriggerCapPath, filename))
-        else:
-            self.checkResult = True
-        print (self.checkResult)
-        #根据检测结果控制字体和图形颜色
-        if self.checkResult == True:
-            self.color = self.green
-            self.charColor = self.charGreen
-        else:
-            self.color = self.red
-            self.charColor = self.charRed
         # 在当前帧上写瓶子状态以及时间戳
-        cv2.putText(img, "Camera:{}".format(self.cameraid), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.charColor,
-                    self.linewidth)
-        cv2.putText(img, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"), (10, img.shape[0] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.charColor, self.linewidth)
-        cv2.putText(img, "CheckResult:{}".format('OK' if self.checkResult == True else 'NG'), (10,40),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.charColor, self.linewidth)
+        cv2.putText(img, "Camera:{}".format(self.cameraid),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color, self.linewidth)
+        cv2.putText(img, datetime.datetime.now().strftime("%A %d %B %Y %I:%M:%S%p"),(10, img.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, self.color, self.linewidth)
+
         cv2image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         cv2imageSave = cv2.cvtColor(imgSave, cv2.COLOR_BGR2RGB)
         self.img = Image.fromarray(cv2image)
         self.imgSave = Image.fromarray(cv2imageSave)
+        # 保存视频
+        if (self.saveVideo == True):
+            self.VideoWriter.write(imgSave)
+
+        # 图片采样
+        if (self.saveSample == True):
+            filename = datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + ".JPG"
+            self.imgSave.save(os.path.join(self.saveSampleForVideoCap, filename))
+
         imgtk = ImageTk.PhotoImage(image=self.img)
         self.lbl_Msg.image = imgtk
         self.lbl_Msg.configure(image=imgtk)
